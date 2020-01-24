@@ -6,13 +6,13 @@
 # verify prerequisites.
 package require initjimsh
 if { ! [exists -command ref]} {
-    error "Jim was built with no support for references.  Can't support slim object-oriented programming."
+	error "Jim was built with no support for references.  Can't support slim object-oriented programming."
 }
 
 # first eliminate Jim's built-in OO support, if present.
 catch {
-    rename class {}
-    rename super {}
+	rename class {}
+	rename super {}
 }
 
 # Create a new class $classname, with the given
@@ -50,48 +50,57 @@ proc class {classname {baseclasses {}} classvars} {
 	}
 
 	# "new" class method, creates a new instance.  this now accepts any desired arguments,
-    # and passes those along to the given ctor method.  
-    # a default ctor method is available; see below.
+	# and passes those along to the given ctor method.  
+	# a default ctor method is available; see below.
 	proc "$classname new" { {ctorName {}} args } {classname classvars vars} {
-        # clone an entire dictionary of instance variables from the existing classvars.
+		# clone an entire dictionary of instance variables from the existing classvars.
 		set instvars $classvars
+		if {$ctorName eq {set}} {
+			# default constructor.  this one simply memorizes each var given as a name and value pair.
+			foreach {n v} $args {set instvars($n) $v}
+			set ctorName {}
+		}
 
 		# declare the object dispatcher for $classname.
-		# Store the classname in both the ref value and tag, for debugging
-		# ref tag (for debugging)
+		# Store the classname in both the ref value and tag, for debugging.
 		set obj [ref $classname $classname "$classname finalize"]
+		# the instance's variables are all stored in the instvars declared here as a static.
+		# that means instance variables are inaccessible (by $ substitution) anywhere else
+		# except inside a method that was dispatched through here.
 		proc $obj {method args} {classname classvars instvars} {
-			if {[exists -command "$classname $method"]} {
-                tailcall "$classname $method" {*}$args
-			}
-            # this eliminates the use of "get" method.  simply mention the var name instead.
-            if {[dict exists $instvars $method]} {
-                return $instvars($method)
-            }
-            if {![exists -command "$classname unknown"]} {
-                return -code error "$classname, unknown method \"$method\": should be [join [$classname methods] ", "]"
-            }
-            return ["$classname unknown" $method {*}$args]
+			if { ! [exists -command "$classname $method"]} {
+				if {[dict exists $instvars $method]} {
+					# this eliminates the use of "get" method.  simply mention the var name instead.
+					return $instvars($method)
+				}
+				if {![exists -command "$classname unknown"]} {
+					return -code error "In class $classname, unknown method \"$method\": should be [join [$classname methods] ", "]"
+				}
+				return ["$classname unknown" $method {*}$args]
+			}			
+			"$classname $method" {*}$args
 		}
-		if {$ctorName eq {set}} {
-            # default constructor.  this one simply memorizes each var given as a name and value pair.
-            foreach {n v} $args {set instvars($n) $v}
-        } elseif {$ctorName ne {}} {
-            # call the additional constructor method that was specified by ctorName.  its return value is discarded.
+		# from this point forward, any change to instvars is ignored; they've already been initialized.
+		
+		if {$ctorName ne {}} {
+			# call the additional constructor method that was specified by ctorName.  its return value is discarded.
 			$obj $ctorName {*}$args
 		}
 		return $obj
 	}
-    
+	
 	# Finalizer to invoke destructor during garbage collection
 	proc "$classname finalize" {ref classname} { $ref destroy }
-    
+	
 	# Method creator
 	proc "$classname method" {method arglist __body} classname {
 		proc "$classname $method" $arglist {__body} {
+#puts "in:[info level 0]"
+#catch {puts "	uplevel:[uplevel 1 {info level 0}]" }
 			# Make sure this isn't incorrectly called without an object
 			if {![uplevel exists instvars]} {
-				return -code error -level 2 "\"[lindex [info level 0] 0]\" method called with no object"
+				# using 'error' here instead of 'return -code error -level 2', to improve stack traces.
+				error "\"[lindex [info level 0] 0]\" method called with no object"
 			}
 			set self [lindex [info level -1] 0]
 			# Note that we can't use 'dict with' here because
@@ -101,7 +110,7 @@ proc class {classname {baseclasses {}} classvars} {
 			eval $__body
 		}
 	}
-    
+	
 	# Other simple class procs
 	proc "$classname vars" {} vars { return $vars }
 	proc "$classname classvars" {} classvars { return $classvars }
@@ -111,14 +120,14 @@ proc class {classname {baseclasses {}} classvars} {
 			lindex [split $p " "] 1
 		}]
 	}
-        
+		
 	# Pre-defined some instance methods
 	$classname method destroy {} { rename $self "" }
 	$classname method eval {{locals {}} __code} {
 		foreach var $locals { upvar 2 $var $var }
 		eval $__code
 	}
-    
+	
 	return $classname
 }
 
