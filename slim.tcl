@@ -151,6 +151,7 @@ proc super {method args} {
 	# it would call itself.  the same bug was present in Jim oo, not only in slim.
 	set implementorClass [lindex [lindex [info level -1] 0] 0]
 #puts implementorClass:$implementorClass
-#puts "uplevel 2 [$implementorClass baseclass] $method {*}$args"
+puts "uplevel 2 [$implementorClass baseclass] $method {*}$args"
+puts "args:[llength $args]:$args"
 	uplevel 2 [$implementorClass baseclass] $method {*}$args
 }

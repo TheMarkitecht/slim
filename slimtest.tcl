@@ -173,10 +173,13 @@ SpendingAccount method describe {} {
 set samir [SpendingAccount new newWithPmt 90 $a {Samir A.}]
 $samir describe
 
-#TODO: test invoking super ctor's.
+# test invoking super ctor's.
 SpendingAccount method newFromParent {args} {
+    puts "Calling:super newFromParent {*}$args"
     super newFromParent {*}$args
 }
+set nibiki [SpendingAccount new newWithPmt 35 $a {Nibiki A.}]
+$nibiki describe
 
 
 # Can we find all objects in the system?
