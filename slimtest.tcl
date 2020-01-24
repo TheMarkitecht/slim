@@ -124,6 +124,23 @@ incr total [$b balance]
 puts "Total of accounts [$a name] and [$b eval {return "$name (Credit Limit: $limit)"}] is: $total"
 
 # test slim's flexible constructors.
+class TeenAccount CreditAccount {
+    parent {}
+}
+# a method name usable as a constructor should start with 'new' just as a convention.
+TeenAccount method newFromParent {parent_ name_} {
+    set parent $parent_
+    set name $name_
+    # enforce some arbitrary rules.
+    if {[$parent classname] ne {Account}} {
+        error "Naughty teen tried to open an account with the wrong parent class."
+    }
+}
+puts "---- object TeenAccount ----"
+set tommy [TeenAccount new newFromParent $a {Tommy A.}]
+$tommy withdraw 50
+puts "withdraw 50 -> [$tommy see]"
+$tommy describe
 # test invoking super ctor's.
 
 # Can we find all objects in the system?
