@@ -141,7 +141,43 @@ set tommy [TeenAccount new newFromParent $a {Tommy A.}]
 $tommy withdraw 50
 puts "withdraw 50 -> [$tommy see]"
 $tommy describe
-# test invoking super ctor's.
+puts "---- object TeenAccount ----"
+set daisy [TeenAccount new set parent $a name {Daisy A.}]
+$daisy withdraw 75
+puts "withdraw 75 -> [$daisy see]"
+$daisy describe
+
+# test a slim constructor calling another one in another class.
+class Payment {} {
+    acct {}
+    amt 0
+}
+Payment method newFromAcct {acct_ amt_} {
+    set acct $acct_
+    set amt $amt_
+}
+Payment method describe {} {
+    puts "Payment $amt from [$acct name]"
+}
+class SpendingAccount TeenAccount {
+    payments {}
+}
+SpendingAccount method newWithPmt {amt args} {
+    $self newFromParent {*}$args
+    lappend payments [Payment new newFromAcct $self $amt]
+}
+SpendingAccount method describe {} {
+    super describe
+    foreach p $payments {$p describe}
+}
+set samir [SpendingAccount new newWithPmt 90 $a {Samir A.}]
+$samir describe
+
+#TODO: test invoking super ctor's.
+SpendingAccount method newFromParent {args} {
+    super newFromParent {*}$args
+}
+
 
 # Can we find all objects in the system?
 # Almost. We can't really distinguish those which aren't real classes.
