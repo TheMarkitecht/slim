@@ -7,18 +7,17 @@ class Account {
 }
 
 # We have some class methods predefined
-# Note we can call (e.g.) either Account.methods or 'Account methods'
 puts "---- class Account ----"
 puts "Account vars=[Account vars]"
 puts "Account methods=[Account methods]"
 puts ""
 
-# Create a constructor. This does validation, but it could
-# do other things
-Account method constructor {} {
+# Create a validation constructor. This can enforce any critical invariants the instance needs.
+Account method validateCtor {} {
 	if {$balance < 0} {
-		error "Can't initialise account with a -ve balance"
+		error "Can't initialise account with negative balance"
 	}
+    puts "[$self classname] opening balance $balance is OK."
 }
 
 # Now flesh out the class with some methods
@@ -70,10 +69,10 @@ class CreditAccount Account {
 	limit -1000
 }
 
-CreditAccount method constructor {} {
+CreditAccount method validateCtor {} {
 	# Dummy constructor
 	# If desired, manually invoke the baseclass constructor
-	super constructor
+	super validateCtor
 }
 
 # Override the 'withdraw' method to allow overdrawing
@@ -125,7 +124,7 @@ incr total [$b balance]
 puts "Total of accounts [$a name] and [$b eval {return "$name (Credit Limit: $limit)"}] is: $total"
 
 # test slim's flexible constructors.
-
+# test invoking super ctor's.
 
 # Can we find all objects in the system?
 # Almost. We can't really distinguish those which aren't real classes.
