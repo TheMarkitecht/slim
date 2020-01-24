@@ -44,7 +44,7 @@ proc class {classname {baseclasses {}} classvars} {
 	# with a nice message if the class procedure doesn't exist
 	proc $classname {{cmd new} args} classname {
 		if {![exists -command "$classname $cmd"]} {
-			return -code error "$classname, unknown command \"$cmd\": should be [join [$classname methods] ", "]"
+			return -code error "In class $classname, unknown command or class method \"$cmd\": should be [join [$classname methods] ", "]"
 		}
 		tailcall "$classname $cmd" {*}$args
 	}
