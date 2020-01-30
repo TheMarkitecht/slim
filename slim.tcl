@@ -104,7 +104,8 @@ proc class {classname {baseclasses {}} classvars} {
 			# Make sure this isn't incorrectly called without an object
 			if {![uplevel exists instvars]} {
 				# using 'error' here instead of 'return -code error -level 2', to improve stack traces.
-				error "\"[lindex [info level 0] 0]\" method called with no object"
+				set meth [lindex [info level 0] 0]
+				error "\"${meth}\" method called with no object.  Did you mean 'new [lindex $meth end]'?"
 			}
 			set self [lindex [info level -1] 0]
 			# Note that we can't use 'dict with' here because
