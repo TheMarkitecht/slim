@@ -25,6 +25,7 @@ catch {
 # The *last* baseclass can be accessed directly with [super]
 # Later baseclasses take precedence if the same method exists in more than one
 proc class {classname {baseclasses {}} classvars} {
+	#TODO: accept comments, subcommands, var substitutions etc in class vars.
 	set baseclassvars {}
 	foreach baseclass $baseclasses {
 		# Start by mapping all methods to the parent class
@@ -77,7 +78,7 @@ proc class {classname {baseclasses {}} classvars} {
 					return -code error "In class $classname, unknown method \"$method\": should be [join [$classname methods] ", "]"
 				}
 				return ["$classname unknown" $method {*}$args]
-			}			
+			}	
 			"$classname $method" {*}$args
 		}
 		# from this point forward, any change to instvars is ignored; they've already been initialized.
@@ -103,9 +104,10 @@ proc class {classname {baseclasses {}} classvars} {
 #catch {puts "	uplevel:[uplevel 1 {info level 0}]" }
 			# Make sure this isn't incorrectly called without an object
 			if {![uplevel exists instvars]} {
-				# using 'error' here instead of 'return -code error -level 2', to improve stack traces.
+				# using 'return -code error' here instead of 'return -code error -level 2', to improve stack traces.
 				set meth [lindex [info level 0] 0]
-				error "\"${meth}\" method called with no object.  Did you mean 'new [lindex $meth end]'?"
+				lassign $meth a b
+				return -code error "\"${meth}\" method called with no object instance.  Did you mean \"$a new $b\"?"
 			}
 			set self [lindex [info level -1] 0]
 			# Note that we can't use 'dict with' here because
