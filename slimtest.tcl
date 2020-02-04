@@ -55,12 +55,16 @@ Account method withdraw {amount} {
     if {$amount > $balance} {error "Sorry $name, can only withdraw $balance"}
     set balance [- $balance $amount]
 }
-Account method describe {} {
-    puts "I am object $self of class [$self classname]"
+Account method describe {label} {
+    puts "$label I am object $self of class [$self classname]"
     puts "My 'see' method returns [$self see]"
     puts "My variables are:"
     foreach i [$self vars] {
-        puts "  $i=[set $i]"
+        set v [set $i]
+        if {[string match <reference.* $v]} {
+            catch {append v "; name=[$v name]"}
+        }
+        puts "  $i=$v"
     }
 }
 
@@ -83,7 +87,7 @@ catch {$a withdraw 1000} res
 puts "withdraw 1000 -> $res\n"
 
 # Tell me something about the object
-$a describe
+$a describe {}
 puts ""
 
 # Now create a new subclass
@@ -104,9 +108,9 @@ CreditAccount method withdraw {amount} {
     set balance [- $balance $amount]
 }
 # Override the 'describe' method, but invoke the baseclass method first
-CreditAccount method describe {} {
+CreditAccount method describe {label} {
     # First invoke the base class 'describe'
-    super describe
+    super describe $label
     if {$balance < 0} {
         puts "*** Account is in debit"
     }
@@ -135,7 +139,7 @@ puts "withdraw 1000 -> [$b see]"
 puts ""
 
 # Tell me something about the object
-$b describe
+$b describe {}
 puts ""
 
 # 'eval' is similar to 'dict with' for an object, except it operates
@@ -163,12 +167,12 @@ puts "---- object TeenAccount ----"
 set tommy [TeenAccount new newFromParent $a {Tommy A.}]
 $tommy withdraw 50
 puts "withdraw 50 -> [$tommy see]"
-$tommy describe
+$tommy describe {}
 puts "---- object TeenAccount ----"
 set daisy [TeenAccount new set parent $a name {Daisy A.}]
 $daisy withdraw 75
 puts "withdraw 75 -> [$daisy see]"
-$daisy describe
+$daisy describe {}
 
 # test a slim constructor calling another one in another class.
 class Payment {} {
@@ -189,20 +193,20 @@ SpendingAccount method newWithPmt {amt args} {
     $self newFromParent {*}$args
     lappend payments [Payment new newFromAcct $self $amt]
 }
-SpendingAccount method describe {} {
-    super describe
+SpendingAccount method describe {label} {
+    super describe $label
     foreach p $payments {$p describe}
 }
 set samir [SpendingAccount new newWithPmt 90 $a {Samir A.}]
-$samir describe
+$samir describe {}
 
 # test invoking super ctor's.
 SpendingAccount method newFromParent {args} {
     puts "Calling:super newFromParent {*}$args"
     super newFromParent {*}$args
 }
-set nibiki [SpendingAccount new newWithPmt 35 $a {Nibiki A.}]
-$nibiki describe
+set nibiki [SpendingAccount new newFromParent $a {Nibiki A.}]
+$nibiki describe {}
 
 
 # Can we find all objects in the system?
@@ -218,7 +222,7 @@ foreach r [info references] {
     if {[getref $r] ne {}} {
         try {
             $r eval {
-                puts [format "Found %14s: Owner: %14s, Balance: %+5d, in object %s" [$self classname] $name $balance $self]
+                puts [format "Found %20s: Owner: %14s, Balance: %+5d, in object %s" [$self classname] $name $balance $self]
             }
         } on error msg {
             puts "Not an object: $r"

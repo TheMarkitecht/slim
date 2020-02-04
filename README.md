@@ -31,6 +31,7 @@ There is no build process.  Simply **package require slim**; see the top of **sl
 ## Future Direction:
 
 * Accept comments, subcommands, variable substitution, etc. in class variable list.
+* Automated comprehensive test suite, with asserts.
 
 ## Legal stuff:
 ```

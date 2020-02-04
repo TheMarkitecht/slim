@@ -136,8 +136,6 @@ proc class {classname {baseclasses {}} classvars} {
     # Method creator
     proc "$classname method" {method arglist __body} classname {
         proc "$classname $method" $arglist {__body} {
-#puts "in:[info level 0]"
-#catch {puts "  uplevel:[uplevel 1 {info level 0}]" }
             # Make sure this isn't incorrectly called without an object
             if {![uplevel exists instvars]} {
                 # using 'return -code error' here instead of 'return -code error -level 2', to improve stack traces.
@@ -178,19 +176,10 @@ proc class {classname {baseclasses {}} classvars} {
 # Note that this will only call the last baseclass given
 proc super {method args} {
     upvar self self
-#puts "super:[$self classname] $method $args"
-#puts "   [info level -1]"
-#puts "   [info level -2]"
-#puts "uplevel 2 [$self baseclass] $method {*}$args"
-    #uplevel 2 [$self baseclass] $method {*}$args
-
     # take for our reference point the class whose method is calling 'super',
     # instead of the class of self.
     # this fixes infinite recursion when an inherited method calls 'super', because
     # it would call itself.  the same bug was present in Jim oo, not only in slim.
     set implementorClass [lindex [lindex [info level -1] 0] 0]
-#puts implementorClass:$implementorClass
-#puts "uplevel 2 [$implementorClass baseclass] $method {*}$args"
-#puts "args:[llength $args]:$args"
-    uplevel 2 [$implementorClass baseclass] $method {*}$args
+    uplevel 2 [list [$implementorClass baseclass] $method {*}$args]
 }
