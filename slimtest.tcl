@@ -1,9 +1,32 @@
+# slim
+# Copyright 2020 Mark Hubbard, a.k.a. "TheMarkitecht"
+# http://www.TheMarkitecht.com
+#
+# Project home:  http://github.com/TheMarkitecht/slim
+# slim is an object-oriented programming package for Jim Tcl (http://jim.tcl.tk/)
+# slim helps you develop well-organized object-oriented apps in Tcl.
+#
+# This file is part of slim.
+#
+# slim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# slim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with slim.  If not, see <https://www.gnu.org/licenses/>.
+
 package require slim
 
 # Create a class, the usual bank account, with two instance variables:
 class Account {
-	balance 0
-	name "Unknown"
+    balance 0
+    name "Unknown"
 }
 
 # We have some class methods predefined
@@ -14,31 +37,31 @@ puts ""
 
 # Create a validation constructor. This can enforce any critical invariants the instance needs.
 Account method validateCtor {} {
-	if {$balance < 0} {
-		error "Can't initialise account with negative balance"
-	}
+    if {$balance < 0} {
+        error "Can't initialise account with negative balance"
+    }
     puts "[$self classname] opening balance $balance is OK."
 }
 
 # Now flesh out the class with some methods
 # Could use 'Account method' here instead
 Account method deposit {amount} {
-	set balance [+ $balance $amount]
+    set balance [+ $balance $amount]
 }
 Account method see {} {
-	set balance
+    set balance
 }
 Account method withdraw {amount} {
-	if {$amount > $balance} {error "Sorry $name, can only withdraw $balance"}
-	set balance [- $balance $amount]
+    if {$amount > $balance} {error "Sorry $name, can only withdraw $balance"}
+    set balance [- $balance $amount]
 }
 Account method describe {} {
-	puts "I am object $self of class [$self classname]"
-	puts "My 'see' method returns [$self see]"
-	puts "My variables are:"
-	foreach i [$self vars] {
-		puts "  $i=[set $i]"
-	}
+    puts "I am object $self of class [$self classname]"
+    puts "My 'see' method returns [$self see]"
+    puts "My variables are:"
+    foreach i [$self vars] {
+        puts "  $i=[set $i]"
+    }
 }
 
 # Now an instance, initialize some fields
@@ -66,27 +89,27 @@ puts ""
 # Now create a new subclass
 # Could change the initial balance here too
 class CreditAccount Account {
-	limit -1000
+    limit -1000
 }
 
 CreditAccount method validateCtor {} {
-	# Dummy constructor
-	# If desired, manually invoke the baseclass constructor
-	super validateCtor
+    # Dummy constructor
+    # If desired, manually invoke the baseclass constructor
+    super validateCtor
 }
 
 # Override the 'withdraw' method to allow overdrawing
 CreditAccount method withdraw {amount} {
-	if {$balance - $amount < $limit} {error "Sorry $name, that would exceed your credit limit of [expr -$limit]"}
-	set balance [- $balance $amount]
+    if {$balance - $amount < $limit} {error "Sorry $name, that would exceed your credit limit of [expr -$limit]"}
+    set balance [- $balance $amount]
 }
 # Override the 'describe' method, but invoke the baseclass method first
 CreditAccount method describe {} {
-	# First invoke the base class 'describe'
-	super describe
-	if {$balance < 0} {
-		puts "*** Account is in debit"
-	}
+    # First invoke the base class 'describe'
+    super describe
+    if {$balance < 0} {
+        puts "*** Account is in debit"
+    }
 }
 
 puts "---- class CreditAccount ----"
@@ -192,15 +215,15 @@ lambda {} {dummy}
 ref blah blah
 
 foreach r [info references] {
-	if {[getref $r] ne {}} {
-		try {
-			$r eval {
-				puts [format "Found %14s: Owner: %14s, Balance: %+5d, in object %s" [$self classname] $name $balance $self]
-			}
-		} on error msg {
-			puts "Not an object: $r"
-		}
-	}
+    if {[getref $r] ne {}} {
+        try {
+            $r eval {
+                puts [format "Found %14s: Owner: %14s, Balance: %+5d, in object %s" [$self classname] $name $balance $self]
+            }
+        } on error msg {
+            puts "Not an object: $r"
+        }
+    }
 }
 unset r
 
