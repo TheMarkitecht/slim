@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with slim.  If not, see <https://www.gnu.org/licenses/>.
 
-#TODO
+#TODO: prove how slim interacts with namespaces.
 proc test {} {
 
     namespace eval nsTest {

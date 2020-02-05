@@ -48,10 +48,8 @@ if { ! [exists -command ref]} {
 }
 
 # first eliminate Jim's built-in OO support, if present.
-catch {
-    rename class {}
-    rename super {}
-}
+catch {rename class {}}
+catch {rename super {}}
 
 # Create a new class $classname, with the given
 # dictionary as class variables. These are the initial
@@ -90,7 +88,7 @@ proc class {classname {baseclasses {}} classvars} {
 
     # "new" class method, creates a new instance.  this now accepts any desired arguments,
     # and passes those along to the given ctor method.
-    # a default ctor method is available; see below.
+    # a default ctor method called 'set' is available; see below.
     proc "$classname new" { {ctorName {}} args } {classname classvars vars} {
         # clone an entire dictionary of instance variables from the existing classvars.
         set instvars $classvars
@@ -153,6 +151,11 @@ proc class {classname {baseclasses {}} classvars} {
             unset __
             eval $__body
         }
+    }
+
+    # classMethod creator.  syntactic sugar making it obvious which procs are used as class methods.
+    proc "$classname classMethod" {method arglist __body} classname {
+        proc "$classname $method" $arglist $__body
     }
 
     # Other simple class procs

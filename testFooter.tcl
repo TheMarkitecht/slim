@@ -22,6 +22,9 @@
 # along with slim.  If not, see <https://www.gnu.org/licenses/>.
 
 try {
+    if { ! [exists -command test]} {
+        error "Test code is noncompliant with test framework conventions."
+    }
     test
 } on error {errMsg errDic} {
     handleTestError $errMsg $errDic
