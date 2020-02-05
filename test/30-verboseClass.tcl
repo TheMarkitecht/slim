@@ -22,14 +22,23 @@
 # along with slim.  If not, see <https://www.gnu.org/licenses/>.
 
 proc test {} {
-    set ::shaved 0
-
     setup Pet
+    setup BrochurePet
 
-    Pet classMethod shave {} {
-        set ::shaved 1
-    }
+    set p [BrochurePet new]
+    assert {[lsort [$p vars]] eq [lsort [list \
+        name  color  species  age  \
+        brochureName  brochure  brochurePages  brochurePics  \
+    ]]}
+    assert {[llength [$p brochurePics]] == 3}
+    assert {[$p brochure] ne [string trimleft [$p brochure]]}
+    assert {[$p brochure] ne [string trimright [$p brochure]]}
 
-    Pet shave
-    assert {$::shaved}
+    set desc "a 1 \n b {one \\  \ntwo} \n c \[list \\  \n one \\  \n two \]"
+    puts $desc
+    class TrailingWhitespace $desc
+    set t [TrailingWhitespace new]
+    assert {[$t a] == 1}
+    assert {[$t b] == {one two}}
+    assert {[$t c] == [list one two]}
 }

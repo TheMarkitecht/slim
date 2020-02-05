@@ -51,17 +51,54 @@ if { ! [exists -command ref]} {
 catch {rename class {}}
 catch {rename super {}}
 
-# Create a new class $classname, with the given
-# dictionary as class variables. These are the initial
+# Create a new class $classname, using the given description to initialize
+# class variables etc..  These are the initial
 # variables which all newly created objects of this class are
 # initialised with.
+# The description can accept # comments, blank lines, subcommands, and
+# variable substitutions.
 #
 # If a list of baseclasses is given,
 # methods and instance variables are inherited.
 # The *last* baseclass can be accessed directly with [super]
 # Later baseclasses take precedence if the same method exists in more than one
-proc class {classname {baseclasses {}} classvars} {
-    #TODO: accept comments, subcommands, var substitutions etc in class vars.
+proc class {classname {baseclasses {}} classDescription} {
+    # parse class description.  perform substitutions.  extract class vars etc.
+    set classvars [dict create]
+    set whole {}
+    foreach lin [split $classDescription \n] {
+        append whole $lin
+        if {[info complete $whole]} {
+            set whole [string trim $whole]
+puts complete=$whole
+            if {[llength $whole] < 1} {
+                # blank line - ignore.
+            } else {
+                if {[lindex $whole 0] eq {#}} {
+                    # comment - ignore.
+                } else {
+                    lassign $whole varName value
+                    set subName [subst $varName]
+puts subName=$subName
+                    if {[llength $whole] == 1} {
+                        set classvars($subName) {}
+                    } elseif {[llength $whole] == 2} {
+                        set subValue [subst $value]
+puts subValue=$subValue
+                        set classvars($subName) $subValue
+                    } else {
+                        return -code error "In class $classname, extra words after initialization: [string range $whole 0 199]"
+                    }
+                }
+            }
+            set whole {}
+        } else {
+puts incomplete=$whole
+            append whole \n
+        }
+    }
+
+    # inherit from base classes.
     set baseclassvars {}
     foreach baseclass $baseclasses {
         # Start by mapping all methods to the parent class
@@ -189,3 +226,5 @@ proc super {method args} {
     set implementorClass [lindex [lindex [info level -1] 0] 0]
     uplevel 2 [list [$implementorClass baseclass] $method {*}$args]
 }
+
+#TODO: see if Jim offers a hook to format the default stack dumps.  maybe override the stackdump command?  then adopt the format from slim's test framework.

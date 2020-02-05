@@ -21,15 +21,44 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with slim.  If not, see <https://www.gnu.org/licenses/>.
 
-proc test {} {
-    set ::shaved 0
+set ::brochureDefaultName broc
 
-    setup Pet
+class BrochurePet Pet {
+    # comment, and a blank line.
 
-    Pet classMethod shave {} {
-        set ::shaved 1
+    # variable substitution.
+    brochureName $::brochureDefaultName
+
+    # multi-line braced string default value.
+    brochure {
+        (Empty brochure text)
     }
 
-    Pet shave
-    assert {$::shaved}
+    # subcommand.
+    brochurePages [dict create page1 landscape]
+
+    # multi-line subcommand.
+    brochurePics  [list  \
+        a.jpg  \
+        b.jpg  \
+        c.jpg  \
+    ]
+
+    # multi-line calculation.
+    totalObjects $(
+        [dict size $brochurePages] +
+        [llength $brochurePics]
+    )
+
+    # quoted string default value.
+    quoted1 "  (brochure $::brochureDefaultName)  "
+
+    # multi-line quoted string default value.
+    quoted2 "
+        (brochure $::brochureDefaultName)
+    "
+
+    # multiple variables on one line.
+    page1 title; page2 content; page3 copyright
 }
+
