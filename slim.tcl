@@ -40,7 +40,9 @@
 # oo.tcl when building Jim.
 
 # verify prerequisites.
-package require initjimsh
+if {$::tcl_platform(engine) ne {Jim}} {
+    error "Interpreter '$::tcl_platform(engine)' can't support slim object-oriented programming.  Slim requires Jim."
+}
 if { ! [exists -command ref]} {
     error "Jim was built with no support for references.  Can't support slim object-oriented programming."
 }
@@ -124,6 +126,7 @@ proc class {classname {baseclasses {}} classvars} {
             $obj $ctorName {*}$args
         }
         # finally, call the validateCtor method, if it exists.  it can enforce any critical invariants the instance needs.
+        #TODO: rename to validateNew
         if {[exists -command "$classname validateCtor"]} {
             $obj validateCtor
         }

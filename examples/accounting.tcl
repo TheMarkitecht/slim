@@ -1,3 +1,5 @@
+#!jimsh
+
 # slim
 # Copyright 2020 Mark Hubbard, a.k.a. "TheMarkitecht"
 # http://www.TheMarkitecht.com
