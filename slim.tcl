@@ -92,9 +92,11 @@ puts incomplete=$whole
             append whole \n
         }
     }
+puts classvars=$classvars
 
     # inherit from base classes.
     set baseclassvars {}
+    proc "$classname baseclass" {} { return {} }
     foreach baseclass $baseclasses {
         # Start by mapping all methods to the parent class
         foreach method [$baseclass methods] { alias "$classname $method" "$baseclass $method" }

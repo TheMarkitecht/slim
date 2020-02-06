@@ -30,6 +30,8 @@ proc test {} {
     assert {$p in [info references]}
     # supports classname?
     assert {[$p classname] eq {Pet}}
+    # supports baseclass?
+    assert {[$p baseclass] eq {}}
     # supports classvars list and has correct classvars?
 puts [lsort [$p classvars]]
 #TODO fix classvars??
@@ -39,7 +41,8 @@ puts [lsort [$p vars]]
     assert {[lsort [$p vars]] eq [lsort [list name color species age]]}
     # supports methods list and has correct methods?
     assert {[lsort [$p methods]] eq [lsort [list  \
-        classMethod classname classvars destroy eval finalize method methods new vars  \
+        baseclass classMethod classname classvars destroy eval  \
+        finalize method methods new vars  \
         fromSpecies makeTag older txt]]}
     # method call ok?
     assert {[$p older] == 1}
