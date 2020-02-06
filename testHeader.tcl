@@ -47,3 +47,10 @@ proc setup {className} {
     source [f+ $::testDir $className.tcl]
 }
 
+proc sortDic {dic} {
+    set all [list]
+    foreach k [lsort [dict keys $dic]] {
+        lappend all $k $dic($k)
+    }
+    return $all
+}

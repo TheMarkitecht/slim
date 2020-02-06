@@ -70,7 +70,6 @@ proc class {classname {baseclasses {}} classDefinition} {
         append whole $lin
         if {[info complete $whole]} {
             set whole [string trim $whole]
-puts complete=$whole
             if {$whole eq {}} {
                 # blank line - ignore.
             } elseif {[string range $whole 0 0] eq {#}} {
@@ -78,7 +77,6 @@ puts complete=$whole
             } elseif {[llength $whole] == 1} {
                 dict set classvars $whole {}
             } else {
-puts "dict set classvars $whole"
                 try {
                     eval "dict set classvars $whole"
                 } on error {errMsg errDic} {
@@ -88,11 +86,9 @@ puts "dict set classvars $whole"
             }
             set whole {}
         } else {
-puts incomplete=$whole
             append whole \n
         }
     }
-puts classvars=$classvars
 
     # inherit from base classes.
     set baseclassvars {}
@@ -195,6 +191,7 @@ puts classvars=$classvars
 
     # Other simple class procs
     proc "$classname vars" {} vars { return $vars }
+    # classvars returns only the DEFAULT values, not the instance's CURRENT values.
     proc "$classname classvars" {} classvars { return $classvars }
     proc "$classname classname" {} classname { return $classname }
     proc "$classname methods" {} classname {
@@ -202,6 +199,8 @@ puts classvars=$classvars
             lindex [split $p " "] 1
         }]
     }
+#TODO: support classprocs list.
+#TODO: rename all built-in functionality to camel-case convention.
 
     # Pre-defined some instance methods
     $classname method destroy {} { rename $self "" }

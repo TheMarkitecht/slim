@@ -26,32 +26,52 @@ proc test {} {
 
     # plain instantiation.
     set p [Pet new]
+
     # created a reference?
     assert {$p in [info references]}
+
     # supports classname?
     assert {[$p classname] eq {Pet}}
+
     # supports baseclass?
     assert {[$p baseclass] eq {}}
-    # supports classvars list and has correct classvars?
-puts [lsort [$p classvars]]
-#TODO fix classvars??
-#    assert {[lsort [$p classvars]] eq [lsort [list name color species age]]}
+
     # supports vars list and has correct vars?
-puts [lsort [$p vars]]
     assert {[lsort [$p vars]] eq [lsort [list name color species age]]}
+
+    # supports classvars dictionary and has correct classvars?
+    set expected [sortDic {
+        name {}
+        color black
+        species {}
+        age 0
+    }]
+    assert {[sortDic [$p classvars]] eq $expected}
+
     # supports methods list and has correct methods?
     assert {[lsort [$p methods]] eq [lsort [list  \
         baseclass classProc classname classvars destroy eval  \
         finalize method methods new vars  \
         fromSpecies makeTag older txt]]}
+
     # method call ok?
     assert {[$p older] == 1}
+
+    # method's modifications to instance vars are retained?
+    assert {[$p older] == 2}
+
+    # modifying instance var didn't modify classvars?
+    # that's because classvars supplies only the DEFAULT values, not the instance's CURRENT values.
+    assert {[sortDic [$p classvars]] eq $expected}
+
     # wrong arguments throws error?
     assertError {wrong # args: should be "Pet older"} {
         $p older tooMuch
     }
+
     # implicit variable fetch ok?
     assert {[$p color] eq {black}}
+
     # nonexistent method/variable throws error?
     assertError {In class Pet, unknown method "junk": should be *} {
         $p junk

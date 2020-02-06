@@ -24,4 +24,11 @@
 proc test {} {
     puts auto_path=$::auto_path
     puts argv=$::argv
+
+    assert {[sortDic {
+        name {}
+        color black
+        species {}
+        age 0
+    }] eq [list age 0 color black name {} species {}]}
 }
