@@ -25,7 +25,7 @@ class Pet {
     name {}
     color black
     species {}
-    age {}
+    age 0
 }
 
 Pet method fromSpecies {name_ species_ color_} {
