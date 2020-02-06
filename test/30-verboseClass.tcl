@@ -29,16 +29,26 @@ proc test {} {
     assert {[lsort [$p vars]] eq [lsort [list \
         name  color  species  age  \
         brochureName  brochure  brochurePages  brochurePics  \
+        totalLen1   totalLen2  quoted1  emptyString
     ]]}
     assert {[llength [$p brochurePics]] == 3}
     assert {[$p brochure] ne [string trimleft [$p brochure]]}
     assert {[$p brochure] ne [string trimright [$p brochure]]}
 
-    set desc "a 1 \n b {one \\  \ntwo} \n c \[list \\  \n one \\  \n two \]"
-    puts $desc
-    class TrailingWhitespace $desc
-    set t [TrailingWhitespace new]
-    assert {[$t a] == 1}
-    assert {[$t b] == {one two}}
-    assert {[$t c] == [list one two]}
+    #TODO: many more asserts on $p
+
+    # test again with no trailing whitespace after a line continuation backslash.
+    set desc "a 1 \n b {one \\  \ntwo} \n c \[list \\\n one \\\n two \]"
+    class Backslash $desc
+    set b [Backslash new]
+    assert {[$b a] == 1}
+    assert {[$b b] eq "one \\  \ntwo"}
+    assert {[$b c] eq [list one two]}
+
+    # test again with trailing whitespace after (what only appears to be)
+    # a line continuation backslash.
+    #TODO: automatically verify this throws an error, as it should.
+    #set desc "a 1 \n b {one \\  \ntwo} \n c \[list \\  \n one \\  \n two \]"
+    #puts *****$desc
+    #class TrailingWhitespace $desc
 }

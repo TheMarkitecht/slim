@@ -44,21 +44,35 @@ class BrochurePet Pet {
         c.jpg  \
     ]
 
+    # calculation.
+    #totalObjects $( [dict size $brochurePages] + [llength $brochurePics] )
+        # previously defined variables are not available yet because the class isn't
+        # complete and available for use yet.
+        # for that kind of sequential buildup, use a constructor instead.
+    totalLen1 $( [string length $::brochureDefaultName] * 3 )
+
     # multi-line calculation.
-    totalObjects $(
-        [dict size $brochurePages] +
-        [llength $brochurePics]
-    )
+    # Jim doesn't support those using the $() syntax.  use expr instead.
+    totalLen2 [expr  \
+        [string length $::brochureDefaultName]  \
+        * 3  \
+    ]
 
     # quoted string default value.
     quoted1 "  (brochure $::brochureDefaultName)  "
 
     # multi-line quoted string default value.
-    quoted2 "
-        (brochure $::brochureDefaultName)
-    "
+    #quoted2 "
+    #    (brochure $::brochureDefaultName)
+    #"
+    # those are not supported in this version due to a bug in 'info complete'.
+    # https://github.com/msteveb/jimtcl/issues/181
+
+    # no default value
+    emptyString
 
     # multiple variables on one line.
-    page1 title; page2 content; page3 copyright
+    #page1 title; page2 content; page3 copyright
+    #TODO: move this case elsewhere.  add a facility to verify it throws an error.
 }
 

@@ -51,44 +51,39 @@ if { ! [exists -command ref]} {
 catch {rename class {}}
 catch {rename super {}}
 
-# Create a new class $classname, using the given description to initialize
+# Create a new class $classname, using the given definition to initialize
 # class variables etc..  These are the initial
 # variables which all newly created objects of this class are
 # initialised with.
-# The description can accept # comments, blank lines, subcommands, and
+# The definition can accept # comments, blank lines, subcommands, and
 # variable substitutions.
 #
 # If a list of baseclasses is given,
 # methods and instance variables are inherited.
 # The *last* baseclass can be accessed directly with [super]
 # Later baseclasses take precedence if the same method exists in more than one
-proc class {classname {baseclasses {}} classDescription} {
-    # parse class description.  perform substitutions.  extract class vars etc.
+proc class {classname {baseclasses {}} classDefinition} {
+    # parse class definition.  perform substitutions.  extract class vars etc.
     set classvars [dict create]
     set whole {}
-    foreach lin [split $classDescription \n] {
+    foreach lin [split $classDefinition \n] {
         append whole $lin
         if {[info complete $whole]} {
             set whole [string trim $whole]
 puts complete=$whole
-            if {[llength $whole] < 1} {
+            if {$whole eq {}} {
                 # blank line - ignore.
+            } elseif {[string range $whole 0 0] eq {#}} {
+                # comment - ignore.
+            } elseif {[llength $whole] == 1} {
+                dict set classvars $whole {}
             } else {
-                if {[lindex $whole 0] eq {#}} {
-                    # comment - ignore.
-                } else {
-                    lassign $whole varName value
-                    set subName [subst $varName]
-puts subName=$subName
-                    if {[llength $whole] == 1} {
-                        set classvars($subName) {}
-                    } elseif {[llength $whole] == 2} {
-                        set subValue [subst $value]
-puts subValue=$subValue
-                        set classvars($subName) $subValue
-                    } else {
-                        return -code error "In class $classname, extra words after initialization: [string range $whole 0 199]"
-                    }
+puts "dict set classvars $whole"
+                try {
+                    eval "dict set classvars $whole"
+                } on error {errMsg errDic} {
+                    return -code error -errorinfo $errDic(-errorinfo) \
+                        "maybe too many words at class member '[string range $whole 0 20]': $errMsg"
                 }
             }
             set whole {}
@@ -185,6 +180,7 @@ puts incomplete=$whole
             # Note that we can't use 'dict with' here because
             # the dict isn't updated until the body completes.
             foreach __ [$self vars] {upvar 1 instvars($__) $__}
+#TODO: fix bug here with unset -nocomplain  https://github.com/msteveb/jimtcl/issues/148
             unset __
             eval $__body
         }
