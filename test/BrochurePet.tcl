@@ -70,9 +70,5 @@ class BrochurePet Pet {
 
     # no default value
     emptyString
-
-    # multiple variables on one line.
-    #page1 title; page2 content; page3 copyright
-    #TODO: move this case elsewhere.  add a facility to verify it throws an error.
 }
 

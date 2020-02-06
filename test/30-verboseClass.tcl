@@ -60,8 +60,15 @@ proc test {} {
 
     # test again with trailing whitespace after (what only appears to be)
     # a line continuation backslash.
-    #TODO: automatically verify this throws an error, as it should.
-    #set desc "a 1 \n b {one \\  \ntwo} \n c \[list \\  \n one \\  \n two \]"
-    #puts *****$desc
-    #class TrailingWhitespace $desc
+    set desc "a 1 \n b {one \\  \ntwo} \n c \[list \\  \n one \\  \n two \]"
+    assertError {* too many words at class member 'c *} {
+        class TrailingWhitespace $desc
+    }
+
+    # test again with multiple variables on one line.
+    assertError {* too many words at class member 'page1 *} {
+        class multi {
+            page1 title; page2 content; page3 copyright
+        }
+    }
 }

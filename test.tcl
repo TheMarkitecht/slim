@@ -34,7 +34,7 @@ proc handleTestError {errMsg errDic} {
 }
 
 proc bench {label  reps  script} {
-    #TODO
+    #TODO: implement benchmarks
     puts "$label:  reps=$reps"
     flush stdout
     set beginMs [clock milliseconds]

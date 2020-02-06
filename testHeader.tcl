@@ -31,8 +31,19 @@ proc assert {exp} {
     }
 }
 
+proc assertError {msgPattern script} {
+    try {
+        uplevel 1 $script
+    } on error {errMsg errDic} {
+        if {[string match $msgPattern $errMsg]} {
+            return {}
+        }
+        return -code error "ASSERT FAILED: error did not match expected pattern.  Actual error caught:\n$errMsg\n[stackdump $errDic(-errorinfo)]\n\n"
+    }
+    return -code error "ASSERT FAILED: expected an error but caught none."
+}
+
 proc setup {className} {
     source [f+ $::testDir $className.tcl]
 }
-
 
