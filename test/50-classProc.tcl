@@ -26,7 +26,7 @@ proc test {} {
 
     setup Pet
 
-    Pet classMethod shave {} {
+    Pet classProc shave {} {
         set ::shaved 1
     }
 

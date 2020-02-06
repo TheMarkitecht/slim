@@ -41,7 +41,7 @@ puts [lsort [$p vars]]
     assert {[lsort [$p vars]] eq [lsort [list name color species age]]}
     # supports methods list and has correct methods?
     assert {[lsort [$p methods]] eq [lsort [list  \
-        baseclass classMethod classname classvars destroy eval  \
+        baseclass classProc classname classvars destroy eval  \
         finalize method methods new vars  \
         fromSpecies makeTag older txt]]}
     # method call ok?

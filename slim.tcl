@@ -188,9 +188,9 @@ puts classvars=$classvars
         }
     }
 
-    # classMethod creator.  syntactic sugar making it obvious which procs are used as class methods.
-    proc "$classname classMethod" {method arglist __body} classname {
-        proc "$classname $method" $arglist $__body
+    # classProc creator.  syntactic sugar making it obvious which procs are used as class methods.
+    proc "$classname classProc" {procName arglist __body} classname {
+        proc "$classname $procName" $arglist $__body
     }
 
     # Other simple class procs
