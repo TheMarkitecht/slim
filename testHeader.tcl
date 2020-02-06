@@ -27,7 +27,7 @@ package require slim
 proc assert {exp} {
     set truth [uplevel 1 [list expr $exp]]
     if { ! $truth} {
-        error "ASSERT FAILED: $exp"
+        return -code error "ASSERT FAILED: $exp"
     }
 }
 

@@ -31,11 +31,24 @@ proc test {} {
         brochureName  brochure  brochurePages  brochurePics  \
         totalLen1   totalLen2  quoted1  emptyString
     ]]}
-    assert {[llength [$p brochurePics]] == 3}
+    assert {[$p brochure] eq {
+        (Empty brochure text)
+    }}
     assert {[$p brochure] ne [string trimleft [$p brochure]]}
     assert {[$p brochure] ne [string trimright [$p brochure]]}
-
-    #TODO: many more asserts on $p
+    assert {[$p brochurePages] eq [dict create page1 landscape]}
+    assert {[$p brochurePics] eq [list  \
+        a.jpg  \
+        b.jpg  \
+        c.jpg  \
+    ]}
+    assert {[$p totalLen1] == ( [string length $::brochureDefaultName] * 3 )}
+    assert {[$p totalLen2] == [expr  \
+        [string length $::brochureDefaultName]  \
+        * 3  \
+    ]}
+    assert {[$p quoted1] eq "  (brochure $::brochureDefaultName)  "}
+    assert {[$p emptyString] eq {}}
 
     # test again with no trailing whitespace after a line continuation backslash.
     set desc "a 1 \n b {one \\  \ntwo} \n c \[list \\\n one \\\n two \]"
