@@ -38,7 +38,7 @@ puts "Account methods=[Account methods]"
 puts ""
 
 # Create a validation constructor. This can enforce any critical invariants the instance needs.
-Account method validateCtor {} {
+Account method validateInstance {} {
     if {$balance < 0} {
         error "Can't initialise account with negative balance"
     }
@@ -98,10 +98,10 @@ class CreditAccount Account {
     limit -1000
 }
 
-CreditAccount method validateCtor {} {
+CreditAccount method validateInstance {} {
     # Dummy constructor
     # If desired, manually invoke the baseclass constructor
-    super validateCtor
+    super validateInstance
 }
 
 # Override the 'withdraw' method to allow overdrawing

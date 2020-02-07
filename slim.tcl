@@ -153,10 +153,9 @@ proc class {classname {baseclasses {}} classDefinition} {
             # call the additional constructor method that was specified by ctorName.  its return value is discarded.
             $obj $ctorName {*}$args
         }
-        # finally, call the validateCtor method, if it exists.  it can enforce any critical invariants the instance needs.
-        #TODO: rename to validateNew
-        if {[exists -command "$classname validateCtor"]} {
-            $obj validateCtor
+        # finally, call the validateInstance method, if it exists.  it can enforce any critical invariants the instance needs.
+        if {[exists -command "$classname validateInstance"]} {
+            $obj validateInstance
         }
         return $obj
     }
