@@ -43,10 +43,24 @@ proc assertError {msgPattern script} {
     return -code error "ASSERT FAILED: expected an error but caught none."
 }
 
+proc assertClassVars {obj state} {
+    assert {[sortDic [$obj classvars]] eq [sortDic $state]}
+}
+
+proc assertState {obj state} {
+    dict for {n v} $state {
+        set actual [$obj $n]
+        if {$v ne $actual} {
+            return -code error "ASSERT FAILED: expected '$n' = '[string range $v 0 20]' but got '[string range $actual 0 20]'"
+        }
+    }
+}
+
 proc setup {className} {
     source [f+ $::testDir $className.tcl]
 }
 
+# sort a dictionary by its keys, so it's comparable.
 proc sortDic {dic} {
     set all [list]
     foreach k [lsort [dict keys $dic]] {

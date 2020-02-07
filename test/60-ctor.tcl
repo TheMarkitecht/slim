@@ -21,31 +21,46 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with slim.  If not, see <https://www.gnu.org/licenses/>.
 
-class Pet {
-    name {}
-    color black
-    species {}
-    age 0
-}
+proc test {} {
+    setup Pet
 
-Pet method fromSpecies {name_ species_ color_} {
-    assert {$name eq {}}
-    assert {$color eq {black}}
-    assert {$age == 0}
-    set name $name_
-    set species $species_
-    set color $color_
-    set age 5
-}
+    # plain instantiation.
+    set p [Pet new]
+    assertState $p {
+        name {}
+        color black
+        species {}
+        age 0
+    }
 
-Pet method txt {} {
-    return "$classname $name is a $color $species."
-}
+    # default ctor 'set'.
+    set p [Pet new set age 10]
+    assertState $p {
+        name {}
+        color black
+        species {}
+        age 10
+    }
 
-Pet method older {} {
-    return [incr age]
-}
+    # named ctor with parms.
+    set p [Pet new fromSpecies Tipper dog brown]
+    assertState $p {
+        name Tipper
+        color brown
+        species dog
+        age 5
+    }
 
-Pet method makeTag {} {
-    return [$self txt]
+    # inherited named ctor.
+    class FossilPet Pet {
+        foundIn {South Dakota}
+    }
+    set p [FossilPet new fromSpecies Tipper dog brown]
+    assertState $p {
+        name Tipper
+        color brown
+        species dog
+        age 5
+        foundIn {South Dakota}
+    }
 }

@@ -40,13 +40,13 @@ proc test {} {
     assert {[lsort [$p vars]] eq [lsort [list name color species age]]}
 
     # supports classvars dictionary and has correct classvars?
-    set expected [sortDic {
+    set expected {
         name {}
         color black
         species {}
         age 0
-    }]
-    assert {[sortDic [$p classvars]] eq $expected}
+    }
+    assertClassVars $p $expected
 
     # supports methods list and has correct methods?
     assert {[lsort [$p methods]] eq [lsort [list  \
@@ -62,7 +62,7 @@ proc test {} {
 
     # modifying instance var didn't modify classvars?
     # that's because classvars supplies only the DEFAULT values, not the instance's CURRENT values.
-    assert {[sortDic [$p classvars]] eq $expected}
+    assertClassVars $p $expected
 
     # wrong arguments throws error?
     assertError {wrong # args: should be "Pet older"} {
