@@ -51,6 +51,16 @@ proc test {} {
         age 5
     }
 
+    # named ctor with 'args'.
+    class Navy {
+        ships [list]
+    }
+    Navy method fromShips {args} {
+        set ships $args
+    }
+    set p [Navy new fromShips carrier destroyer frigate]
+    assertState $p {ships {carrier destroyer frigate}}
+
     # inherited named ctor.
     class FossilPet Pet {
         foundIn {South Dakota}
@@ -62,5 +72,34 @@ proc test {} {
         species dog
         age 5
         foundIn {South Dakota}
+    }
+
+    # ctor call other ctor.
+    class Complex {
+        stuff {}
+        flotsam {}
+    }
+    Complex method ctorA {} {
+        $self ctorB none
+        set flotsam all
+    }
+    Complex method ctorB {amount} {
+        set stuff $amount
+    }
+    set p [Complex new ctorA]
+    assertState $p {stuff none flotsam all}
+
+    # ctor call super ctor w/same name.
+    FossilPet method fromSpecies {name_ species_ color_ foundIn_} {
+        super fromSpecies $name_ $species_ $color_
+        set foundIn $foundIn_
+    }
+    set p [FossilPet new fromSpecies Tipper dog brown Montana]
+    assertState $p {
+        name Tipper
+        color brown
+        species dog
+        age 5
+        foundIn Montana
     }
 }
