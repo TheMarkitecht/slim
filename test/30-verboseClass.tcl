@@ -29,7 +29,7 @@ proc test {} {
     assert {[lsort [$p vars]] eq [lsort [list \
         name  color  species  age  \
         brochureName  brochure  brochurePages  brochurePics  \
-        totalLen1   totalLen2  quoted1  emptyString
+        totalLen1   totalLen2  totalLen3  quoted1  emptyString
     ]]}
     assert {[$p brochure] eq {
         (Empty brochure text)
@@ -47,6 +47,10 @@ proc test {} {
         [string length $::brochureDefaultName]  \
         * 3  \
     ]}
+    assert {[$p totalLen3] == [expr {
+        [string length $::brochureDefaultName]
+        * 3
+    }]}
     assert {[$p quoted1] eq "  (brochure $::brochureDefaultName)  "}
     assert {[$p emptyString] eq {}}
 

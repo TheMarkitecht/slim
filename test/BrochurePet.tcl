@@ -58,6 +58,12 @@ class BrochurePet Pet {
         * 3  \
     ]
 
+    # subcommand with braced multi-line arg, often used for calculation.
+    totalLen3 [expr {
+        [string length $::brochureDefaultName]
+        * 3
+    }]
+
     # quoted string default value.
     quoted1 "  (brochure $::brochureDefaultName)  "
 
