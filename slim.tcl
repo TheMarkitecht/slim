@@ -136,10 +136,6 @@ proc class {classname {baseclasses {}} classDefinition} {
         # except inside a method that was dispatched through here.
         proc $obj {method args} {classname classvars instvars} {
             if { ! [exists -command "$classname $method"]} {
-                if {[dict exists $instvars $method]} {
-                    # this eliminates the use of "get" method.  simply mention the var name instead.
-                    return $instvars($method)
-                }
                 if {![exists -command "$classname unknown"]} {
                     return -code error "In class $classname, unknown method \"$method\": should be [join [$classname methods] ", "]"
                 }
@@ -148,9 +144,9 @@ proc class {classname {baseclasses {}} classDefinition} {
             "$classname $method" {*}$args
         }
         # from this point forward, any change to instvars is ignored; they've already been initialized.
-#TODO: provide 1 of 3 selectable accessor (variable getter) styles:  "none", "get", or "byName".
+#TODO: provide 1 of 3 selectable accessor (variable getter) styles:  "none", "get", or "bare".
 # "get" is the style Jim's built-in OO provides.
-# "byName" is the style provided so far in slim.  this is slower in the existing version, but
+# "bare" is the style provided so far in slim.  this is slower in the existing version, but
 # can be made faster by automatically declaring accessor methods, avoiding the need to check membership during dispatch.
 # then go back to a faster dispatcher, like Jim's built-in OO has, since it's again good for all 3 cases.
 
@@ -211,6 +207,12 @@ proc class {classname {baseclasses {}} classDefinition} {
     $classname method eval {{locals {}} __code} {
         foreach var $locals { upvar 2 $var $var }
         eval $__code
+    }
+
+    # define bare accessor methods to get instance vars.  doing so here avoids
+    # an additional step during each method dispatch.
+    foreach var $vars {
+        $classname method $var {} "set $var"
     }
 
     return $classname

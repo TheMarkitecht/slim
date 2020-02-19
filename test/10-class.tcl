@@ -52,6 +52,7 @@ proc test {} {
     assert {[lsort [$p methods]] eq [lsort [list  \
         baseclass classProc classname classvars destroy eval  \
         finalize method methods new vars  \
+        name color species age  \
         fromSpecies makeTag older txt]]}
 
     # method call ok?

@@ -26,4 +26,8 @@ proc test {} {
 
     class Empty {}
 
+    #TODO:     Empty method describe {} {
+    #    return {empty class}
+    #}
+
 }
