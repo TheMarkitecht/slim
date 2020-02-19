@@ -27,7 +27,7 @@ proc test {} {
 
     set p [BrochurePet new]
     assert {[lsort [$p vars]] eq [lsort [list \
-        name  color  species  age  \
+        name  color  species  age  collar  \
         brochureName  brochure  brochurePages  brochurePics  \
         totalLen1   totalLen2  totalLen3  quoted1  emptyString
     ]]}
@@ -55,7 +55,7 @@ proc test {} {
     assert {[$p emptyString] eq {}}
 
     # test again with no trailing whitespace after a line continuation backslash.
-    set desc "a 1 \n b {one \\  \ntwo} \n c \[list \\\n one \\\n two \]"
+    set desc "rw a 1 \n rw b {one \\  \ntwo} \n rw c \[list \\\n one \\\n two \]"
     class Backslash $desc
     set b [Backslash new]
     assert {[$b a] == 1}
@@ -64,15 +64,15 @@ proc test {} {
 
     # test again with trailing whitespace after (what only appears to be)
     # a line continuation backslash.
-    set desc "a 1 \n b {one \\  \ntwo} \n c \[list \\  \n one \\  \n two \]"
-    assertError {* too many words at class member 'c *} {
+    set desc "rw a 1 \n rw b {one \\  \ntwo} \n rw c \[list \\  \n one \\  \n two \]"
+    assertError {* too many words at class member 'rw c *} {
         class TrailingWhitespace $desc
     }
 
     # test again with multiple variables on one line.
-    assertError {* too many words at class member 'page1 *} {
+    assertError {* too many words at class member 'rw page1 *} {
         class multi {
-            page1 title; page2 content; page3 copyright
+            rw page1 title; rw page2 content; rw page3 copyright
         }
     }
 }

@@ -27,45 +27,45 @@ class BrochurePet Pet {
     # comment, and a blank line.
 
     # variable substitution.
-    brochureName $::brochureDefaultName
+    r brochureName $::brochureDefaultName
 
     # multi-line braced string default value.
-    brochure {
+    r brochure {
         (Empty brochure text)
     }
 
     # subcommand.
-    brochurePages [dict create page1 landscape]
+    r brochurePages [dict create page1 landscape]
 
     # multi-line subcommand.
-    brochurePics  [list  \
+    r brochurePics  [list  \
         a.jpg  \
         b.jpg  \
         c.jpg  \
     ]
 
     # calculation.
-    #totalObjects $( [dict size $brochurePages] + [llength $brochurePics] )
+    #r totalObjects $( [dict size $brochurePages] + [llength $brochurePics] )
         # previously defined variables are not available yet because the class isn't
         # complete and available for use yet.
         # for that kind of sequential buildup, use a constructor instead.
-    totalLen1 $( [string length $::brochureDefaultName] * 3 )
+    r totalLen1 $( [string length $::brochureDefaultName] * 3 )
 
     # multi-line calculation.
     # Jim doesn't support those using the $() syntax.  use expr instead.
-    totalLen2 [expr  \
+    r totalLen2 [expr  \
         [string length $::brochureDefaultName]  \
         * 3  \
     ]
 
     # subcommand with braced multi-line arg, often used for calculation.
-    totalLen3 [expr {
+    r totalLen3 [expr {
         [string length $::brochureDefaultName]
         * 3
     }]
 
     # quoted string default value.
-    quoted1 "  (brochure $::brochureDefaultName)  "
+    r quoted1 "  (brochure $::brochureDefaultName)  "
 
     # multi-line quoted string default value.
     #quoted2 "
@@ -75,6 +75,6 @@ class BrochurePet Pet {
     # https://github.com/msteveb/jimtcl/issues/181
 
     # no default value
-    emptyString
+    r emptyString
 }
 

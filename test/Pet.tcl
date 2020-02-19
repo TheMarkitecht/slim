@@ -21,11 +21,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with slim.  If not, see <https://www.gnu.org/licenses/>.
 
+# inside a class definition, r is an abbreviation of read,
+# rw is an abbreviation of readwrite, p is an abbreviation of private.
 class Pet {
-    name {}
-    color black
-    species {}
-    age 0
+    read name {}
+    r color black
+    r species {}
+    r age 0
+    rw collar {}
 }
 
 Pet method fromSpecies {name_ species_ color_} {

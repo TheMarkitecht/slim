@@ -37,7 +37,7 @@ proc test {} {
     assert {[$p baseclass] eq {}}
 
     # supports vars list and has correct vars?
-    assert {[lsort [$p vars]] eq [lsort [list name color species age]]}
+    assert {[lsort [$p vars]] eq [lsort [list name color species age collar]]}
 
     # supports classvars dictionary and has correct classvars?
     set expected {
@@ -45,14 +45,16 @@ proc test {} {
         color black
         species {}
         age 0
+        collar {}
     }
+puts [sortDic [$p classvars]]
     assertClassVars $p $expected
 
     # supports methods list and has correct methods?
     assert {[lsort [$p methods]] eq [lsort [list  \
         baseclass classProc classname classvars destroy eval  \
-        finalize method methods new vars  \
-        name color species age  \
+        finalize method methods new set vars  \
+        name color species age collar  \
         fromSpecies makeTag older txt]]}
 
     # method call ok?
@@ -70,7 +72,7 @@ proc test {} {
         $p older tooMuch
     }
 
-    # implicit variable fetch ok?
+    # variable fetch through implicit bare accessor method ok?
     assert {[$p color] eq {black}}
 
     # nonexistent method/variable throws error?
@@ -78,4 +80,16 @@ proc test {} {
         $p junk
     }
 
+    # variable write through implicit mutator method ok?
+    # extra spacing is used here to ensure Jim parses and matches
+    # that command name OK after slim declares it.
+    assert {[$p   collar] eq {}}
+    assert {[$p   set   collar   small] eq {small}}
+    # and is retained?
+    assert {[$p   collar] eq {small}}
+
+    # illegal variable write through implicit mutator method throws error?
+    assertError {In class Pet, instance variable "age" is not writable from outside the instance.} {
+        $p set age 10
+    }
 }

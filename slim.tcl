@@ -63,8 +63,12 @@ catch {rename super {}}
 # The *last* baseclass can be accessed directly with [super]
 # Later baseclasses take precedence if the same method exists in more than one
 proc class {classname {baseclasses {}} classDefinition} {
+    {memberRe {^(\S+)\s+(\S+)(.*)$}}
+} {
     # parse class definition.  perform substitutions.  extract class vars etc.
     set classvars [dict create]
+    set implicitAccess [list]
+    set implicitMutate [list]
     set whole {}
     foreach lin [split $classDefinition \n] {
         append whole $lin
@@ -74,14 +78,41 @@ proc class {classname {baseclasses {}} classDefinition} {
                 # blank line - ignore.
             } elseif {[string range $whole 0 0] eq {#}} {
                 # comment - ignore.
-            } elseif {[llength $whole] == 1} {
-                dict set classvars $whole {}
             } else {
-                try {
-                    eval "dict set classvars $whole"
-                } on error {errMsg errDic} {
-                    return -code error -errorinfo $errDic(-errorinfo) \
-                        "maybe too many words at class member '[string range $whole 0 20]': $errMsg"
+    puts whole:$whole
+                # use a regex to parse a variable definition.  this approach doesn't support
+                # a variable name of more than one word.  but those aren't helpful in ordinary
+                # source code anyway.  classes are generally defined statically, not dynamically.
+                if { ! [regexp $memberRe $whole junk cmd name valueExpr]} {
+                    return -code error "syntax error at class member '[string range $whole 0 20]'"
+                }
+    puts "    cmd:$cmd"
+    puts "    name:$name"
+    puts "    valueExpr:$valueExpr"
+                if {$cmd in {read r readwrite rw private p}} {
+                    # variable declaration.
+                    set valueExpr [string trim $valueExpr]
+                    if {$valueExpr eq {}} {
+                        set valueExpr {{}}
+                    }
+#TODO: experiment with eval return $valueExpr
+# or eval set value $valueExpr
+# and subst $name
+                    # call eval to invoke the Tcl interpreter on the many words to be evaluated to obtain the rvalue.
+                    try {
+                        eval "dict set classvars $name $valueExpr"
+                    } on error {errMsg errDic} {
+                        return -code error -errorinfo $errDic(-errorinfo) \
+                            "maybe too many words at class member '[string range $whole 0 20]': $errMsg"
+                    }
+                    if {$cmd in {read r readwrite rw}} {
+                        lappend implicitAccess $name
+                    }
+                    if {$cmd in {readwrite rw}} {
+                        lappend implicitMutate $name
+                    }
+                } else {
+                    return -code error "invalid class member '[string range $whole 0 20]'"
                 }
             }
             set whole {}
@@ -144,11 +175,6 @@ proc class {classname {baseclasses {}} classDefinition} {
             "$classname $method" {*}$args
         }
         # from this point forward, any change to instvars is ignored; they've already been initialized.
-#TODO: provide 1 of 3 selectable accessor (variable getter) styles:  "none", "get", or "bare".
-# "get" is the style Jim's built-in OO provides.
-# "bare" is the style provided so far in slim.  this is slower in the existing version, but
-# can be made faster by automatically declaring accessor methods, avoiding the need to check membership during dispatch.
-# then go back to a faster dispatcher, like Jim's built-in OO has, since it's again good for all 3 cases.
 
         if {$ctorName ne {}} {
             # call the additional constructor method that was specified by ctorName.  its return value is discarded.
@@ -196,7 +222,7 @@ proc class {classname {baseclasses {}} classDefinition} {
     proc "$classname classname" {} classname { return $classname }
     proc "$classname methods" {} classname {
         lsort [lmap p [info commands "$classname *"] {
-            lindex [split $p " "] 1
+            lrange $p 1 end
         }]
     }
 #TODO: support classprocs list.
@@ -211,8 +237,16 @@ proc class {classname {baseclasses {}} classDefinition} {
 
     # define bare accessor methods to get instance vars.  doing so here avoids
     # an additional step during each method dispatch.
-    foreach var $vars {
-        $classname method $var {} "set $var"
+    foreach var $implicitAccess {
+        proc "$classname $var" {} "uplevel 1 set instvars($var)"
+    }
+    # define mutator method to set instance vars.  it has to be one method, not one per var,
+    # because multi-word method names aren't supported by the object's dispatcher.
+    proc "$classname set" {var value} {classname implicitMutate} {
+        if {$var ni $implicitMutate} {
+            return -code error -level 2 "In class $classname, instance variable \"$var\" is not writable from outside the instance."
+        }
+        uplevel 1 set instvars($var) $value
     }
 
     return $classname

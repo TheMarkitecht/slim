@@ -53,7 +53,7 @@ proc test {} {
 
     # named ctor with 'args'.
     class Navy {
-        ships [list]
+        r ships [list]
     }
     Navy method fromShips {args} {
         set ships $args
@@ -63,7 +63,7 @@ proc test {} {
 
     # inherited named ctor.
     class FossilPet Pet {
-        foundIn {South Dakota}
+        r foundIn {South Dakota}
     }
     set p [FossilPet new fromSpecies Tipper dog brown]
     assertState $p {
@@ -76,8 +76,8 @@ proc test {} {
 
     # ctor call other ctor.
     class Complex {
-        stuff {}
-        flotsam {}
+        r stuff {}
+        r flotsam {}
     }
     Complex method ctorA {} {
         $self ctorB none
