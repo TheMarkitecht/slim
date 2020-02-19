@@ -28,13 +28,12 @@ proc test {} {
         variable a 5
         proc m1 {} {
             namespace upvar ::nsTest a a
-            puts $a
             incr a
         }
         proc m2 {} {
-            m1
-            m1
-            m1
+            assert {[m1] == 6}
+            assert {[m1] == 7}
+            assert {[m1] == 8}
         }
     }
     nsTest::m2
