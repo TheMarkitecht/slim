@@ -148,6 +148,11 @@ proc class {classname {baseclasses {}} classDefinition} {
             "$classname $method" {*}$args
         }
         # from this point forward, any change to instvars is ignored; they've already been initialized.
+#TODO: provide 1 of 3 selectable accessor (variable getter) styles:  "none", "get", or "byName".
+# "get" is the style Jim's built-in OO provides.
+# "byName" is the style provided so far in slim.  this is slower in the existing version, but
+# can be made faster by automatically declaring accessor methods, avoiding the need to check membership during dispatch.
+# then go back to a faster dispatcher, like Jim's built-in OO has, since it's again good for all 3 cases.
 
         if {$ctorName ne {}} {
             # call the additional constructor method that was specified by ctorName.  its return value is discarded.
