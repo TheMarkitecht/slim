@@ -79,19 +79,4 @@ puts [sortDic [$p classvars]]
     assertError {In class Pet, unknown method "junk": should be *} {
         $p junk
     }
-
-    # variable write through implicit mutator method ok?
-    # extra spacing is used here to ensure Jim parses and matches
-    # that command name OK after slim declares it.
-    assert {[$p   collar] eq {}}
-    assert {[$p   set   collar   small] eq {small}}
-    # and is retained?
-    assert {[$p   collar] eq {small}}
-
-    # illegal variable write through implicit mutator method throws error?
-    assertError {In class Pet, instance variable "age" is not writable from outside the instance.} {
-        $p set age 10
-    }
-
-#TODO: verify ctors can use implicit get/set.
 }
