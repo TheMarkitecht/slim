@@ -33,8 +33,8 @@ proc test {} {
     # supports className?
     assert {[$p className] eq {Pet}}
 
-    # supports baseclass?
-    assert {[$p baseclass] eq {}}
+    # supports baseClass?
+    assert {[$p baseClass] eq {}}
 
     # supports vars list and has correct vars?
     assert {[lsort [$p vars]] eq [lsort [list name color species age collar]]}
@@ -51,7 +51,7 @@ proc test {} {
 
     # supports methods list and has correct methods?
     assert {[lsort [$p methods]] eq [lsort [list  \
-        baseclass classProc className classVars destroy eval  \
+        baseClass classProc className classVars destroy eval  \
         finalize method methods new set vars  \
         name color species age collar  \
         fromSpecies makeTag older txt]]}

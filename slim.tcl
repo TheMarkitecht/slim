@@ -58,11 +58,11 @@ catch {rename super {}}
 # The definition can accept # comments, blank lines, subcommands, and
 # variable substitutions.
 #
-# If a list of baseclasses is given,
+# If a list of baseClasses is given,
 # methods and instance variables are inherited.
-# The *last* baseclass can be accessed directly with [super]
-# Later baseclasses take precedence if the same method exists in more than one
-proc class {className {baseclasses {}} classDefinition} {
+# The *last* baseClass can be accessed directly with [super]
+# Later baseClasses take precedence if the same method exists in more than one
+proc class {className {baseClasses {}} classDefinition} {
     {memberRe {^(\S+)\s+(\S+)(.*)$}}
 } {
     # parse class definition.  perform substitutions.  extract class vars etc.
@@ -124,17 +124,17 @@ proc class {className {baseclasses {}} classDefinition} {
 
     # inherit from base classes.
     set baseClassVars {}
-    proc "$className baseclass" {} { return {} }
-    foreach baseclass $baseclasses {
+    proc "$className baseClass" {} { return {} }
+    foreach baseClass $baseClasses {
         # Start by mapping all methods to the parent class
-        foreach method [$baseclass methods] { alias "$className $method" "$baseclass $method" }
+        foreach method [$baseClass methods] { alias "$className $method" "$baseClass $method" }
         # Now import the base class classVars
-        set baseClassVars [dict merge $baseClassVars [$baseclass classVars]]
-        # The last baseclass will win here
-        proc "$className baseclass" {} baseclass { return $baseclass }
+        set baseClassVars [dict merge $baseClassVars [$baseClass classVars]]
+        # The last baseClass will win here
+        proc "$className baseClass" {} baseClass { return $baseClass }
     }
 
-    # Merge in the baseclass vars with lower precedence
+    # Merge in the baseClass vars with lower precedence
     set classVars [dict merge $baseClassVars $classVars]
     set vars [lsort [dict keys $classVars]]
 
@@ -226,7 +226,6 @@ proc class {className {baseclasses {}} classDefinition} {
         }]
     }
 #TODO: support classprocs list.
-#TODO: rename all built-in functionality to camel-case convention.
 
     # Pre-defined some instance methods
     $className method destroy {} { rename $self "" }
@@ -253,7 +252,7 @@ proc class {className {baseclasses {}} classDefinition} {
 }
 
 # From within a method, invokes the given method on the base class.
-# Note that this will only call the last baseclass given
+# Note that this will only call the last baseClass given
 proc super {method args} {
     upvar self self
     # take for our reference point the class whose method is calling 'super',
@@ -261,7 +260,7 @@ proc super {method args} {
     # this fixes infinite recursion when an inherited method calls 'super', because
     # it would call itself.  the same bug was present in Jim oo, not only in slim.
     set implementorClass [lindex [lindex [info level -1] 0] 0]
-    uplevel 2 [list [$implementorClass baseclass] $method {*}$args]
+    uplevel 2 [list [$implementorClass baseClass] $method {*}$args]
 }
 
 #TODO: see if Jim offers a hook to format the default stack dumps.  maybe override the stackdump command?  then adopt the format from slim's test framework.

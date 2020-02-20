@@ -100,7 +100,7 @@ class CreditAccount Account {
 
 CreditAccount method validateInstance {} {
     # Dummy constructor
-    # If desired, manually invoke the baseclass constructor
+    # If desired, manually invoke the baseClass constructor
     super validateInstance
 }
 
@@ -109,7 +109,7 @@ CreditAccount method withdraw {amount} {
     if {$balance - $amount < $limit} {error "Sorry $name, that would exceed your credit limit of [expr -$limit]"}
     set balance [- $balance $amount]
 }
-# Override the 'describe' method, but invoke the baseclass method first
+# Override the 'describe' method, but invoke the baseClass method first
 CreditAccount method describe {label} {
     # First invoke the base class 'describe'
     super describe $label
