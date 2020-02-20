@@ -31,7 +31,7 @@ proc test {} {
         rw [next] one
         rw [next] two
         rw [next] three
-        r class$classname isDyn
+        r class$className isDyn
     }
     set p [Dyn new]
     assertState $p [list member1 one  member2 two  member3 three  classDyn isDyn]

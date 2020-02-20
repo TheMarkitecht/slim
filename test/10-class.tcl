@@ -30,8 +30,8 @@ proc test {} {
     # created a reference?
     assert {$p in [info references]}
 
-    # supports classname?
-    assert {[$p classname] eq {Pet}}
+    # supports className?
+    assert {[$p className] eq {Pet}}
 
     # supports baseclass?
     assert {[$p baseclass] eq {}}
@@ -51,7 +51,7 @@ proc test {} {
 
     # supports methods list and has correct methods?
     assert {[lsort [$p methods]] eq [lsort [list  \
-        baseclass classProc classname classvars destroy eval  \
+        baseclass classProc className classvars destroy eval  \
         finalize method methods new set vars  \
         name color species age collar  \
         fromSpecies makeTag older txt]]}

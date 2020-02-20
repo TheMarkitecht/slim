@@ -51,7 +51,7 @@ if { ! [exists -command ref]} {
 catch {rename class {}}
 catch {rename super {}}
 
-# Create a new class $classname, using the given definition to initialize
+# Create a new class $className, using the given definition to initialize
 # class variables etc..  These are the initial
 # variables which all newly created objects of this class are
 # initialised with.
@@ -62,7 +62,7 @@ catch {rename super {}}
 # methods and instance variables are inherited.
 # The *last* baseclass can be accessed directly with [super]
 # Later baseclasses take precedence if the same method exists in more than one
-proc class {classname {baseclasses {}} classDefinition} {
+proc class {className {baseclasses {}} classDefinition} {
     {memberRe {^(\S+)\s+(\S+)(.*)$}}
 } {
     # parse class definition.  perform substitutions.  extract class vars etc.
@@ -124,34 +124,34 @@ proc class {classname {baseclasses {}} classDefinition} {
 
     # inherit from base classes.
     set baseclassvars {}
-    proc "$classname baseclass" {} { return {} }
+    proc "$className baseclass" {} { return {} }
     foreach baseclass $baseclasses {
         # Start by mapping all methods to the parent class
-        foreach method [$baseclass methods] { alias "$classname $method" "$baseclass $method" }
+        foreach method [$baseclass methods] { alias "$className $method" "$baseclass $method" }
         # Now import the base class classvars
         set baseclassvars [dict merge $baseclassvars [$baseclass classvars]]
         # The last baseclass will win here
-        proc "$classname baseclass" {} baseclass { return $baseclass }
+        proc "$className baseclass" {} baseclass { return $baseclass }
     }
 
     # Merge in the baseclass vars with lower precedence
     set classvars [dict merge $baseclassvars $classvars]
     set vars [lsort [dict keys $classvars]]
 
-    # This is the class dispatcher for $classname
-    # It simply dispatches 'classname cmd' to a procedure named {classname cmd}
+    # This is the class dispatcher for $className
+    # It simply dispatches 'className cmd' to a procedure named {className cmd}
     # with a nice message if the class procedure doesn't exist
-    proc $classname {{cmd new} args} classname {
-        if {![exists -command "$classname $cmd"]} {
-            return -code error "In class $classname, unknown command or class method \"$cmd\": should be [join [$classname methods] ", "]"
+    proc $className {{cmd new} args} className {
+        if {![exists -command "$className $cmd"]} {
+            return -code error "In class $className, unknown command or class method \"$cmd\": should be [join [$className methods] ", "]"
         }
-        tailcall "$classname $cmd" {*}$args
+        tailcall "$className $cmd" {*}$args
     }
 
     # "new" class method, creates a new instance.  this now accepts any desired arguments,
     # and passes those along to the given ctor method.
     # a default ctor method called 'set' is available; see below.
-    proc "$classname new" { {ctorName {}} args } {classname classvars vars} {
+    proc "$className new" { {ctorName {}} args } {className classvars vars} {
         # clone an entire dictionary of instance variables from the existing classvars.
         set instvars $classvars
         if {$ctorName eq {set}} {
@@ -160,20 +160,20 @@ proc class {classname {baseclasses {}} classDefinition} {
             set ctorName {}
         }
 
-        # declare the object dispatcher for $classname.
-        # Store the classname in both the ref value and tag, for debugging.
-        set obj [ref $classname $classname "$classname finalize"]
+        # declare the object dispatcher for $className.
+        # Store the className in both the ref value and tag, for debugging.
+        set obj [ref $className $className "$className finalize"]
         # the instance's variables are all stored in the instvars declared here as a static.
         # that means instance variables are inaccessible (by $ substitution) anywhere else
         # except inside a method that was dispatched through here.
-        proc $obj {method args} {classname classvars instvars} {
-            if { ! [exists -command "$classname $method"]} {
-                if {![exists -command "$classname unknown"]} {
-                    return -code error "In class $classname, unknown method \"$method\": should be [join [$classname methods] ", "]"
+        proc $obj {method args} {className classvars instvars} {
+            if { ! [exists -command "$className $method"]} {
+                if {![exists -command "$className unknown"]} {
+                    return -code error "In class $className, unknown method \"$method\": should be [join [$className methods] ", "]"
                 }
-                return ["$classname unknown" $method {*}$args]
+                return ["$className unknown" $method {*}$args]
             }
-            "$classname $method" {*}$args
+            "$className $method" {*}$args
         }
         # from this point forward, any change to instvars is ignored; they've already been initialized.
 
@@ -182,18 +182,18 @@ proc class {classname {baseclasses {}} classDefinition} {
             $obj $ctorName {*}$args
         }
         # finally, call the validateInstance method, if it exists.  it can enforce any critical invariants the instance needs.
-        if {[exists -command "$classname validateInstance"]} {
+        if {[exists -command "$className validateInstance"]} {
             $obj validateInstance
         }
         return $obj
     }
 
     # Finalizer to invoke destructor during garbage collection
-    proc "$classname finalize" {ref classname} { $ref destroy }
+    proc "$className finalize" {ref className} { $ref destroy }
 
     # Method creator
-    proc "$classname method" {method arglist __body} classname {
-        proc "$classname $method" $arglist {__body} {
+    proc "$className method" {method arglist __body} className {
+        proc "$className $method" $arglist {__body} {
             # Make sure this isn't incorrectly called without an object
             if {![uplevel exists instvars]} {
                 # using 'return -code error' here instead of 'return -code error -level 2', to improve stack traces.
@@ -211,17 +211,17 @@ proc class {classname {baseclasses {}} classDefinition} {
     }
 
     # classProc creator.  syntactic sugar making it obvious which procs are used as class methods.
-    proc "$classname classProc" {procName arglist __body} classname {
-        proc "$classname $procName" $arglist $__body
+    proc "$className classProc" {procName arglist __body} className {
+        proc "$className $procName" $arglist $__body
     }
 
     # Other simple class procs
-    proc "$classname vars" {} vars { return $vars }
+    proc "$className vars" {} vars { return $vars }
     # classvars returns only the DEFAULT values, not the instance's CURRENT values.
-    proc "$classname classvars" {} classvars { return $classvars }
-    proc "$classname classname" {} classname { return $classname }
-    proc "$classname methods" {} classname {
-        lsort [lmap p [info commands "$classname *"] {
+    proc "$className classvars" {} classvars { return $classvars }
+    proc "$className className" {} className { return $className }
+    proc "$className methods" {} className {
+        lsort [lmap p [info commands "$className *"] {
             lrange $p 1 end
         }]
     }
@@ -229,8 +229,8 @@ proc class {classname {baseclasses {}} classDefinition} {
 #TODO: rename all built-in functionality to camel-case convention.
 
     # Pre-defined some instance methods
-    $classname method destroy {} { rename $self "" }
-    $classname method eval {{locals {}} __code} {
+    $className method destroy {} { rename $self "" }
+    $className method eval {{locals {}} __code} {
         foreach var $locals { upvar 2 $var $var }
         eval $__code
     }
@@ -238,18 +238,18 @@ proc class {classname {baseclasses {}} classDefinition} {
     # define bare accessor methods to get instance vars.  doing so here avoids
     # an additional step during each method dispatch.
     foreach var $implicitAccess {
-        proc "$classname $var" {} "uplevel 1 set instvars($var)"
+        proc "$className $var" {} "uplevel 1 set instvars($var)"
     }
     # define mutator method to set instance vars.  it has to be one method, not one per var,
     # because multi-word method names aren't supported by the object's dispatcher.
-    proc "$classname set" {var value} {classname implicitMutate} {
+    proc "$className set" {var value} {className implicitMutate} {
         if {$var ni $implicitMutate} {
-            return -code error -level 2 "In class $classname, instance variable \"$var\" is not writable from outside the instance."
+            return -code error -level 2 "In class $className, instance variable \"$var\" is not writable from outside the instance."
         }
         uplevel 1 set instvars($var) $value
     }
 
-    return $classname
+    return $className
 }
 
 # From within a method, invokes the given method on the base class.
