@@ -34,12 +34,13 @@ proc test {} {
     }
 
     # default ctor 'set'.
-    set p [Pet new set age 10]
+    set p [Pet new set age 10 collar large]
     assertState $p {
         name {}
         color black
         species {}
         age 10
+        collar large
     }
 
     # named ctor with parms.

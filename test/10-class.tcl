@@ -92,4 +92,6 @@ puts [sortDic [$p classvars]]
     assertError {In class Pet, instance variable "age" is not writable from outside the instance.} {
         $p set age 10
     }
+
+#TODO: verify ctors can use implicit get/set.
 }

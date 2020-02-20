@@ -83,11 +83,12 @@ proc class {classname {baseclasses {}} classDefinition} {
                 # use a regex to parse a variable definition.  this approach doesn't support
                 # a variable name of more than one word.  but those aren't helpful in ordinary
                 # source code anyway.  classes are generally defined statically, not dynamically.
-                if { ! [regexp $memberRe $whole junk cmd name valueExpr]} {
+                # the valueExpr, however, is often multiple words, e.g. subcommands.
+                if { ! [regexp $memberRe $whole junk cmd nameExpr valueExpr]} {
                     return -code error "syntax error at class member '[string range $whole 0 20]'"
                 }
     puts "    cmd:$cmd"
-    puts "    name:$name"
+    puts "    nameExpr:$nameExpr"
     puts "    valueExpr:$valueExpr"
                 if {$cmd in {read r readwrite rw private p}} {
                     # variable declaration.
@@ -95,16 +96,20 @@ proc class {classname {baseclasses {}} classDefinition} {
                     if {$valueExpr eq {}} {
                         set valueExpr {{}}
                     }
-#TODO: experiment with eval return $valueExpr
-# or eval set value $valueExpr
-# and subst $name
-                    # call eval to invoke the Tcl interpreter on the many words to be evaluated to obtain the rvalue.
                     try {
-                        eval "dict set classvars $name $valueExpr"
+                        set name [subst $nameExpr]
+                    } on error {errMsg errDic} {
+                        return -code error -errorinfo $errDic(-errorinfo) \
+                            "while evaluating variable name in '[string range $whole 0 20]': $errMsg"
+                    }
+                    # call eval to invoke the Tcl interpreter on the many words of the valueExpr.
+                    try {
+                        eval "set value $valueExpr"
                     } on error {errMsg errDic} {
                         return -code error -errorinfo $errDic(-errorinfo) \
                             "maybe too many words at class member '[string range $whole 0 20]': $errMsg"
                     }
+                    dict set classvars $name $value
                     if {$cmd in {read r readwrite rw}} {
                         lappend implicitAccess $name
                     }
