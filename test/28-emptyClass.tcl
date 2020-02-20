@@ -26,8 +26,10 @@ proc test {} {
 
     class Empty {}
 
-    #TODO:     Empty method describe {} {
-    #    return {empty class}
-    #}
+    Empty method describe {} {
+        return {empty class}
+    }
 
+    set p [Empty]
+    assert {[$p describe] eq {empty class}}
 }

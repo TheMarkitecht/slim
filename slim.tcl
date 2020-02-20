@@ -209,8 +209,7 @@ proc class {classname {baseclasses {}} classDefinition} {
             # Note that we can't use 'dict with' here because
             # the dict isn't updated until the body completes.
             foreach __ [$self vars] {upvar 1 instvars($__) $__}
-#TODO: fix bug here with unset -nocomplain  https://github.com/msteveb/jimtcl/issues/148
-            unset __
+            unset -nocomplain __
             eval $__body
         }
     }
