@@ -79,7 +79,6 @@ proc class {classname {baseclasses {}} classDefinition} {
             } elseif {[string range $whole 0 0] eq {#}} {
                 # comment - ignore.
             } else {
-    puts whole:$whole
                 # use a regex to parse a variable definition.  this approach doesn't support
                 # a variable name of more than one word.  but those aren't helpful in ordinary
                 # source code anyway.  classes are generally defined statically, not dynamically.
@@ -87,9 +86,6 @@ proc class {classname {baseclasses {}} classDefinition} {
                 if { ! [regexp $memberRe $whole junk cmd nameExpr valueExpr]} {
                     return -code error "syntax error at class member '[string range $whole 0 20]'"
                 }
-    puts "    cmd:$cmd"
-    puts "    nameExpr:$nameExpr"
-    puts "    valueExpr:$valueExpr"
                 if {$cmd in {read r readwrite rw private p}} {
                     # variable declaration.
                     set valueExpr [string trim $valueExpr]

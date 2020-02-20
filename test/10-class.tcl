@@ -47,7 +47,6 @@ proc test {} {
         age 0
         collar {}
     }
-puts [sortDic [$p classvars]]
     assertClassVars $p $expected
 
     # supports methods list and has correct methods?
