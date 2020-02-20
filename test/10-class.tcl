@@ -37,7 +37,7 @@ proc test {} {
     assert {[$p baseClass] eq {}}
 
     # supports vars list and has correct vars?
-    assert {[lsort [$p vars]] eq [lsort [list name color species age collar]]}
+    assert {[lsort [$p instanceVarsList]] eq [lsort [list name color species age collar]]}
 
     # supports classVars dictionary and has correct classVars?
     set expected {
@@ -47,12 +47,12 @@ proc test {} {
         age 0
         collar {}
     }
-    assertClassVars $p $expected
+    assertDefaults $p $expected
 
     # supports methods list and has correct methods?
     assert {[lsort [$p methods]] eq [lsort [list  \
-        baseClass classProc className classVars destroy eval  \
-        finalize method methods new set vars  \
+        baseClass classProc className destroy eval  \
+        finalize instanceDefaultsDict instanceVarsList method methods new set  \
         name color species age collar  \
         fromSpecies makeTag older txt]]}
 
@@ -64,7 +64,7 @@ proc test {} {
 
     # modifying instance var didn't modify classVars?
     # that's because classVars supplies only the DEFAULT values, not the instance's CURRENT values.
-    assertClassVars $p $expected
+    assertDefaults $p $expected
 
     # wrong arguments throws error?
     assertError {wrong # args: should be "Pet older"} {

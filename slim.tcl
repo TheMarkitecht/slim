@@ -128,15 +128,15 @@ proc class {className {baseClasses {}} classDefinition} {
     foreach baseClass $baseClasses {
         # Start by mapping all methods to the parent class
         foreach method [$baseClass methods] { alias "$className $method" "$baseClass $method" }
-        # Now import the base class classVars
-        set baseClassVars [dict merge $baseClassVars [$baseClass classVars]]
+        # Now import the base class instanceDefaultsDict
+        set baseClassVars [dict merge $baseClassVars [$baseClass instanceDefaultsDict]]
         # The last baseClass will win here
         proc "$className baseClass" {} baseClass { return $baseClass }
     }
 
     # Merge in the baseClass vars with lower precedence
     set classVars [dict merge $baseClassVars $classVars]
-    set vars [lsort [dict keys $classVars]]
+    set instanceVarsList [lsort [dict keys $classVars]]
 
     # This is the class dispatcher for $className
     # It simply dispatches 'className cmd' to a procedure named {className cmd}
@@ -151,7 +151,7 @@ proc class {className {baseClasses {}} classDefinition} {
     # "new" class method, creates a new instance.  this now accepts any desired arguments,
     # and passes those along to the given ctor method.
     # a default ctor method called 'set' is available; see below.
-    proc "$className new" { {ctorName {}} args } {className classVars vars} {
+    proc "$className new" { {ctorName {}} args } {className classVars instanceVarsList} {
         # clone an entire dictionary of instance variables from the existing classVars.
         set instVars $classVars
         if {$ctorName eq {set}} {
@@ -160,13 +160,14 @@ proc class {className {baseClasses {}} classDefinition} {
             set ctorName {}
         }
 
+#TODO: clean up nomenclature throughout: 'object' -> 'instance', some 'class' -> 'instance', 'class vars' -> 'instanceDefaults'
         # declare the object dispatcher for $className.
         # Store the className in both the ref value and tag, for debugging.
         set obj [ref $className $className "$className finalize"]
         # the instance's variables are all stored in the instVars declared here as a static.
         # that means instance variables are inaccessible (by $ substitution) anywhere else
         # except inside a method that was dispatched through here.
-        proc $obj {method args} {className classVars instVars} {
+        proc $obj {method args} {className instVars instanceVarsList} {
             if { ! [exists -command "$className $method"]} {
                 if {![exists -command "$className unknown"]} {
                     return -code error "In class $className, unknown method \"$method\": should be [join [$className methods] ", "]"
@@ -204,7 +205,7 @@ proc class {className {baseClasses {}} classDefinition} {
             set self [lindex [info level -1] 0]
             # Note that we can't use 'dict with' here because
             # the dict isn't updated until the body completes.
-            foreach __ [$self vars] {upvar 1 instVars($__) $__}
+            foreach __  [uplevel 1 set instanceVarsList] {upvar 1 instVars($__) $__}
             unset -nocomplain __
             eval $__body
         }
@@ -216,9 +217,9 @@ proc class {className {baseClasses {}} classDefinition} {
     }
 
     # Other simple class procs
-    proc "$className vars" {} vars { return $vars }
+    proc "$className instanceVarsList" {} instanceVarsList { return $instanceVarsList }
     # classVars returns only the DEFAULT values, not the instance's CURRENT values.
-    proc "$className classVars" {} classVars { return $classVars }
+    proc "$className instanceDefaultsDict" {} classVars { return $classVars }
     proc "$className className" {} className { return $className }
     proc "$className methods" {} className {
         lsort [lmap p [info commands "$className *"] {

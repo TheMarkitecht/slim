@@ -26,7 +26,7 @@ proc test {} {
     setup BrochurePet
 
     set p [BrochurePet new]
-    assert {[lsort [$p vars]] eq [lsort [list \
+    assert {[lsort [$p instanceVarsList]] eq [lsort [list \
         name  color  species  age  collar  \
         brochureName  brochure  brochurePages  brochurePics  \
         totalLen1   totalLen2  totalLen3  quoted1  emptyString

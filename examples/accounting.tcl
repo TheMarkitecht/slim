@@ -239,3 +239,5 @@ $a destroy
 # Let the garbage collection take care of this one
 unset b
 collect
+
+#TODO: update and re-test the accounting script.
