@@ -1,4 +1,4 @@
-#!jimsh
+#!/usr/bin/env jimsh
 
 # slim
 # Copyright 2020 Mark Hubbard, a.k.a. "TheMarkitecht"
@@ -23,17 +23,20 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with slim.  If not, see <https://www.gnu.org/licenses/>.
 
+set ::appDir [file join [pwd] [file dirname [info script]]]
+lappend auto_path $::appDir
+    puts auto_path=$::auto_path
 package require slim
 
 # Create a class, the usual bank account, with two instance variables:
 class Account {
-    balance 0
-    name "Unknown"
+    p balance 0
+    r name "Unknown"
 }
 
 # We have some class methods predefined
 puts "---- class Account ----"
-puts "Account vars=[Account vars]"
+puts "Account vars=[Account instanceVarsList]"
 puts "Account methods=[Account methods]"
 puts ""
 
@@ -42,7 +45,7 @@ Account method validateInstance {} {
     if {$balance < 0} {
         error "Can't initialise account with negative balance"
     }
-    puts "[$self classname] opening balance $balance is OK."
+    puts "[$self className] opening balance $balance is OK."
 }
 
 # Now flesh out the class with some methods
@@ -58,10 +61,10 @@ Account method withdraw {amount} {
     set balance [- $balance $amount]
 }
 Account method describe {label} {
-    puts "$label I am object $self of class [$self classname]"
+    puts "$label I am object $self of class [$self className]"
     puts "My 'see' method returns [$self see]"
     puts "My variables are:"
-    foreach i [$self vars] {
+    foreach i [$self instanceVarsList] {
         set v [set $i]
         if {[string match <reference.* $v]} {
             catch {append v "; name=[$v name]"}
@@ -75,8 +78,8 @@ set a [Account new set name "Bob Smith"]
 
 puts "---- object Account ----"
 # We can use class methods on the instance too
-puts a.vars=[$a vars]
-puts a.classname=[$a classname]
+puts a.vars=[$a instanceVarsList]
+puts a.className=[$a className]
 
 # Now object methods
 $a deposit 100
@@ -95,7 +98,7 @@ puts ""
 # Now create a new subclass
 # Could change the initial balance here too
 class CreditAccount Account {
-    limit -1000
+    p limit -1000
 }
 
 CreditAccount method validateInstance {} {
@@ -119,15 +122,15 @@ CreditAccount method describe {label} {
 }
 
 puts "---- class CreditAccount ----"
-puts "CreditAccount vars=[CreditAccount vars]"
+puts "CreditAccount vars=[CreditAccount instanceVarsList]"
 puts "CreditAccount methods=[CreditAccount methods]"
 puts ""
 
 puts "---- object CreditAccount ----"
 set b [CreditAccount new set name "John White"]
 
-puts b.vars=[$b vars]
-puts b.classname=[$b classname]
+puts b.vars=[$b instanceVarsList]
+puts b.className=[$b className]
 
 puts "initial balance -> [$b see]"
 $b deposit 100
@@ -149,24 +152,24 @@ puts ""
 # It is useful for ad-hoc operations for which it is not worth defining a method.
 set total 0
 $a eval total { incr total $balance }
-incr total [$b balance]
+incr total [$b see]
 puts "Total of accounts [$a name] and [$b eval {return "$name (Credit Limit: $limit)"}] is: $total"
 
-# test slim's flexible constructors.
+# try out slim's flexible constructors.
 class TeenAccount CreditAccount {
-    parent {}
+    p parent {}
 }
-# a method name usable as a constructor should start with 'new' just as a convention.
-TeenAccount method newFromParent {parent_ name_} {
+# a method name usable as a constructor should start with 'from' just as a convention.
+TeenAccount method fromParent {parent_ name_} {
     set parent $parent_
     set name $name_
     # enforce some arbitrary rules.
-    if {[$parent classname] ne {Account}} {
+    if {[$parent className] ne {Account}} {
         error "Naughty teen tried to open an account with the wrong parent class."
     }
 }
 puts "---- object TeenAccount ----"
-set tommy [TeenAccount new newFromParent $a {Tommy A.}]
+set tommy [TeenAccount new fromParent $a {Tommy A.}]
 $tommy withdraw 50
 puts "withdraw 50 -> [$tommy see]"
 $tommy describe {}
@@ -178,10 +181,10 @@ $daisy describe {}
 
 # test a slim constructor calling another one in another class.
 class Payment {} {
-    acct {}
-    amt 0
+    p acct {}
+    p amt 0
 }
-Payment method newFromAcct {acct_ amt_} {
+Payment method fromAcct {acct_ amt_} {
     set acct $acct_
     set amt $amt_
 }
@@ -189,45 +192,48 @@ Payment method describe {} {
     puts "Payment $amt from [$acct name]"
 }
 class SpendingAccount TeenAccount {
-    payments {}
+    p payments {}
 }
-SpendingAccount method newWithPmt {amt args} {
-    $self newFromParent {*}$args
-    lappend payments [Payment new newFromAcct $self $amt]
+SpendingAccount method fromPayment {amt args} {
+    $self fromParent {*}$args
+    lappend payments [Payment new fromAcct $self $amt]
 }
 SpendingAccount method describe {label} {
     super describe $label
     foreach p $payments {$p describe}
 }
-set samir [SpendingAccount new newWithPmt 90 $a {Samir A.}]
+set samir [SpendingAccount new fromPayment 90 $a {Samir A.}]
 $samir describe {}
 
 # test invoking super ctor's.
-SpendingAccount method newFromParent {args} {
-    puts "Calling:super newFromParent {*}$args"
-    super newFromParent {*}$args
+SpendingAccount method fromParent {args} {
+    puts "Calling:super fromParent {*}$args"
+    super fromParent {*}$args
 }
-set nibiki [SpendingAccount new newFromParent $a {Nibiki A.}]
+set nibiki [SpendingAccount new fromParent $a {Nibiki A.}]
 $nibiki describe {}
 
 
 # Can we find all objects in the system?
 # Almost. We can't really distinguish those which aren't real classes.
 # This will get all references which aren't simple lambdas.
-puts "---- All objects ----"
 Account new set name "Terry Green" balance 20
 set x [Account]
 lambda {} {dummy}
 ref blah blah
 
-foreach r [info references] {
-    if {[getref $r] ne {}} {
+puts "---- All objects ----"
+foreach r [lsort [info references]] {
+    #if {[getref $r] ne {}}
+    if {[catch "$r className"]} {
+        puts "Not an object: $r"
+    } else {
         try {
             $r eval {
-                puts [format "Found %20s: Owner: %14s, Balance: %+5d, in object %s" [$self classname] $name $balance $self]
+                puts [format "Found %20s: Owner: %14s, Balance: %+5d, in object %s" [$self className] $name $balance $self]
             }
         } on error msg {
-            puts "Not an object: $r"
+            puts "Not an Account: $r"
         }
     }
 }
@@ -240,4 +246,3 @@ $a destroy
 unset b
 collect
 
-#TODO: update and re-test the accounting script.
