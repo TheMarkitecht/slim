@@ -43,10 +43,6 @@ proc assertError {msgPattern script} {
     return -code error "ASSERT FAILED: expected an error but caught none."
 }
 
-proc assertDefaults {obj defaultsDic} {
-    assert {[sortDic [$obj instanceDefaultsDict]] eq [sortDic $defaultsDic]}
-}
-
 proc assertState {obj state} {
     dict for {n v} $state {
         set actual [$obj $n]

@@ -28,7 +28,7 @@ proc test {} {
 
     # variable write through implicit mutator method ok?
     # extra spacing is used here to ensure Jim parses and matches
-    # that command name OK after slim declares it.
+    # that command name OK after slim defines it.
     assert {[$p   collar] eq {}}
     assert {[$p   set   collar   small] eq {small}}
     # and is retained?

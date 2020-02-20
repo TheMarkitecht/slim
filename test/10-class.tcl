@@ -27,7 +27,7 @@ proc test {} {
     # plain instantiation.
     set p [Pet new]
 
-    # created a reference?
+    # created a unique reference?
     assert {$p in [info references]}
 
     # supports className?
@@ -39,7 +39,7 @@ proc test {} {
     # supports vars list and has correct vars?
     assert {[lsort [$p instanceVarsList]] eq [lsort [list name color species age collar]]}
 
-    # supports classVars dictionary and has correct classVars?
+    # has correct default values?
     set expected {
         name {}
         color black
@@ -47,12 +47,12 @@ proc test {} {
         age 0
         collar {}
     }
-    assertDefaults $p $expected
+    assertState $p $expected
 
     # supports methods list and has correct methods?
     assert {[lsort [$p methods]] eq [lsort [list  \
         baseClass classProc className destroy eval  \
-        finalize instanceDefaultsDict instanceVarsList method methods new set  \
+        finalize instanceVarsList method methods new set templateVarsDict  \
         name color species age collar  \
         fromSpecies makeTag older txt]]}
 
@@ -62,9 +62,12 @@ proc test {} {
     # method's modifications to instance vars are retained?
     assert {[$p older] == 2}
 
-    # modifying instance var didn't modify classVars?
-    # that's because classVars supplies only the DEFAULT values, not the instance's CURRENT values.
-    assertDefaults $p $expected
+    # next instance has a different identity unique from the last one?
+    set t [Pet new]
+    assert {$t ne $p}
+
+    # modifying p instance var didn't modify template vars for t?
+    assertState $t $expected
 
     # wrong arguments throws error?
     assertError {wrong # args: should be "Pet older"} {
@@ -74,7 +77,7 @@ proc test {} {
     # variable fetch through implicit bare accessor method ok?
     assert {[$p color] eq {black}}
 
-    # nonexistent method/variable throws error?
+    # nonexistent method throws error?
     assertError {In class Pet, unknown method "junk": should be *} {
         $p junk
     }

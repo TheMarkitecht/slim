@@ -51,22 +51,43 @@ if { ! [exists -command ref]} {
 catch {rename class {}}
 catch {rename super {}}
 
-# Create a new class $className, using the given definition to initialize
-# class variables etc..  These are the initial
-# variables which all newly created objects of this class are
-# initialised with.
-# The definition can accept # comments, blank lines, subcommands, and
-# variable substitutions.
+# Create a new class $className, using the given definition to determine "template
+# variables" etc..  Template variables are the initial variables which all newly
+# created instances of this class are constructed with.
 #
-# If a list of baseClasses is given,
-# methods and instance variables are inherited.
-# The *last* baseClass can be accessed directly with [super]
-# Later baseClasses take precedence if the same method exists in more than one
+# During instance construction,
+# a copy of the template variables is made specifically for that instance.  That copy
+# is called the "instance variables".  Instance variables are the only variables
+# that are automatically accessible inside instance methods.  Any other variables
+# set by a method body are ordinary Tcl variables.  That means they are local, and
+# are lost after the method returns.
+#
+# Template variables themselves are not generally useful after the class is defined;
+# they're only for constructing a new instance.
+#
+# slim doesn't support any concept of "class variables" as seen in some other OOP
+# languages such as Java: https://en.wikipedia.org/wiki/Class_variable
+# Those would exist outside of any instance, exactly once regardless of how many
+# instances exist.
+#
+# Likewise, slim doesn't support anything called a "class method".  Instead those are called
+# "classProc".  That prevents them being confused with "methods", meaning instance methods.
+#
+# The class definition can accept # comments, blank lines, variable substitutions,
+# and subcommands.  Variable substitutions and subcommands may be used in either the
+# name or value of a template variable.  If so, those are evaluated at the time of
+# class definition, not at instance construction.  To evaluate them at the time of
+# instance construction instead, move them to the body of a constructor.
+#
+# If a list of one or more baseClasses is given, instance methods and
+# template variables are inherited from those.  The *last* baseClass can be accessed
+# directly with [super].
+# Later baseClasses take precedence if the same method exists in more than one.
 proc class {className {baseClasses {}} classDefinition} {
     {memberRe {^(\S+)\s+(\S+)(.*)$}}
 } {
-    # parse class definition.  perform substitutions.  extract class vars etc.
-    set classVars [dict create]
+    # parse class definition.  perform substitutions.  extract template vars etc.
+    set tpVars [dict create]
     set implicitAccess [list]
     set implicitMutate [list]
     set whole {}
@@ -79,15 +100,15 @@ proc class {className {baseClasses {}} classDefinition} {
             } elseif {[string range $whole 0 0] eq {#}} {
                 # comment - ignore.
             } else {
-                # use a regex to parse a variable definition.  this approach doesn't support
-                # a variable name of more than one word.  but those aren't helpful in ordinary
+                # use a regex to parse a template variable definition.  this approach doesn't support
+                # a nameExpr of more than one word.  but those aren't helpful in ordinary
                 # source code anyway.  classes are generally defined statically, not dynamically.
                 # the valueExpr, however, is often multiple words, e.g. subcommands.
                 if { ! [regexp $memberRe $whole junk cmd nameExpr valueExpr]} {
                     return -code error "syntax error at class member '[string range $whole 0 20]'"
                 }
                 if {$cmd in {read r readwrite rw private p}} {
-                    # variable declaration.
+                    # template variable definition.
                     set valueExpr [string trim $valueExpr]
                     if {$valueExpr eq {}} {
                         set valueExpr {{}}
@@ -105,7 +126,7 @@ proc class {className {baseClasses {}} classDefinition} {
                         return -code error -errorinfo $errDic(-errorinfo) \
                             "maybe too many words at class member '[string range $whole 0 20]': $errMsg"
                     }
-                    dict set classVars $name $value
+                    dict set tpVars $name $value
                     if {$cmd in {read r readwrite rw}} {
                         lappend implicitAccess $name
                     }
@@ -123,22 +144,22 @@ proc class {className {baseClasses {}} classDefinition} {
     }
 
     # inherit from base classes.
-    set baseClassVars {}
+    set baseTpVars {}
     proc "$className baseClass" {} { return {} }
     foreach baseClass $baseClasses {
-        # Start by mapping all methods to the parent class
+        # Start by mapping all methods and classProcs to the base class
         foreach method [$baseClass methods] { alias "$className $method" "$baseClass $method" }
-        # Now import the base class instanceDefaultsDict
-        set baseClassVars [dict merge $baseClassVars [$baseClass instanceDefaultsDict]]
+        # Now import the base class template vars
+        set baseTpVars [dict merge $baseTpVars [$baseClass templateVarsDict]]
         # The last baseClass will win here
         proc "$className baseClass" {} baseClass { return $baseClass }
     }
 
-    # Merge in the baseClass vars with lower precedence
-    set classVars [dict merge $baseClassVars $classVars]
-    set instanceVarsList [lsort [dict keys $classVars]]
+    # Merge in the base class template vars with lower precedence
+    set tpVars [dict merge $baseTpVars $tpVars]
+    set instanceVarsList [lsort [dict keys $tpVars]]
 
-    # This is the class dispatcher for $className
+    # define the class dispatcher for $className
     # It simply dispatches 'className cmd' to a procedure named {className cmd}
     # with a nice message if the class procedure doesn't exist
     proc $className {{cmd new} args} className {
@@ -147,27 +168,29 @@ proc class {className {baseClasses {}} classDefinition} {
         }
         tailcall "$className $cmd" {*}$args
     }
+#TODO: try again to eliminate the class dispatcher.
 
     # "new" class method, creates a new instance.  this now accepts any desired arguments,
     # and passes those along to the given ctor method.
     # a default ctor method called 'set' is available; see below.
-    proc "$className new" { {ctorName {}} args } {className classVars instanceVarsList} {
-        # clone an entire dictionary of instance variables from the existing classVars.
-        set instVars $classVars
+    proc "$className new" { {ctorName {}} args } {className tpVars instanceVarsList} {
+        # clone an entire dictionary of instance variables from the existing tpVars.
+        set instanceVarsDict $tpVars
         if {$ctorName eq {set}} {
             # default constructor.  this one simply memorizes each var given as a name and value pair.
-            foreach {n v} $args {set instVars($n) $v}
+            foreach {n v} $args {set instanceVarsDict($n) $v}
             set ctorName {}
         }
 
-#TODO: clean up nomenclature throughout: 'object' -> 'instance', some 'class' -> 'instance', 'class vars' -> 'instanceDefaults'
-        # declare the object dispatcher for $className.
+        # create a reference as the unique identity of the instance.
         # Store the className in both the ref value and tag, for debugging.
-        set obj [ref $className $className "$className finalize"]
-        # the instance's variables are all stored in the instVars declared here as a static.
+        set ins [ref $className $className "$className finalize"]
+
+        # define the instance dispatcher for $ins.
+        # the instance's variables are all stored in the instanceVarsDict defined here as a static.
         # that means instance variables are inaccessible (by $ substitution) anywhere else
         # except inside a method that was dispatched through here.
-        proc $obj {method args} {className instVars instanceVarsList} {
+        proc $ins {method args} {className instanceVarsDict instanceVarsList} {
             if { ! [exists -command "$className $method"]} {
                 if {![exists -command "$className unknown"]} {
                     return -code error "In class $className, unknown method \"$method\": should be [join [$className methods] ", "]"
@@ -176,27 +199,30 @@ proc class {className {baseClasses {}} classDefinition} {
             }
             "$className $method" {*}$args
         }
-        # from this point forward, any change to instVars is ignored; they've already been initialized.
+        # from this point forward, any change to instanceVarsDict is ignored; they've already been
+        # copied into the dispatcher's static variable.
 
         if {$ctorName ne {}} {
             # call the additional constructor method that was specified by ctorName.  its return value is discarded.
-            $obj $ctorName {*}$args
+            $ins $ctorName {*}$args
         }
         # finally, call the validateInstance method, if it exists.  it can enforce any critical invariants the instance needs.
         if {[exists -command "$className validateInstance"]} {
-            $obj validateInstance
+            $ins validateInstance
         }
-        return $obj
+        return $ins
     }
 
     # Finalizer to invoke destructor during garbage collection
     proc "$className finalize" {ref className} { $ref destroy }
 
-    # Method creator
+    # Method creator.  methods can be added to a class at any time.
+    # even so, methods remain uniform for every instance of a class, just like classProcs do.
+    # that means old instances are never left out; they can use the newest methods.
     proc "$className method" {method arglist __body} className {
         proc "$className $method" $arglist {__body} {
-            # Make sure this isn't incorrectly called without an object
-            if {![uplevel exists instVars]} {
+            # Make sure this isn't incorrectly called without an instance
+            if {![uplevel 1 exists instanceVarsDict]} {
                 # using 'return -code error' here instead of 'return -code error -level 2', to improve stack traces.
                 set meth [lindex [info level 0] 0]
                 lassign $meth a b
@@ -205,30 +231,37 @@ proc class {className {baseClasses {}} classDefinition} {
             set self [lindex [info level -1] 0]
             # Note that we can't use 'dict with' here because
             # the dict isn't updated until the body completes.
-            foreach __  [uplevel 1 set instanceVarsList] {upvar 1 instVars($__) $__}
+            foreach __  [uplevel 1 set instanceVarsList] {upvar 1 instanceVarsDict($__) $__}
             unset -nocomplain __
             eval $__body
         }
     }
 
-    # classProc creator.  syntactic sugar making it obvious which procs are used as class methods.
+    # classProc creator.  using this makes it obvious which procs are class members.
+    # it also allows slim to report methods and classProcs separately.
+#TODO: support classProcs list.  report those in their own classProc for that purpose.
+# eliminate them from 'methods'.
+# append to them in here:
     proc "$className classProc" {procName arglist __body} className {
         proc "$className $procName" $arglist $__body
     }
 
-    # Other simple class procs
+    # Other simple built-in classProcs.
     proc "$className instanceVarsList" {} instanceVarsList { return $instanceVarsList }
-    # classVars returns only the DEFAULT values, not the instance's CURRENT values.
-    proc "$className instanceDefaultsDict" {} classVars { return $classVars }
+    proc "$className templateVarsDict" {} tpVars { return $tpVars }
     proc "$className className" {} className { return $className }
+    # methods list is always computed dynamically, because methods can be added to a class at any time.
     proc "$className methods" {} className {
         lsort [lmap p [info commands "$className *"] {
             lrange $p 1 end
         }]
     }
-#TODO: support classprocs list.
+#TODO: add test cases for multiple inheritance.
+#TODO: support inheritance test.  implement as method inherits {className}.
+# recursive, not iterative, due to multiple inheritance.  include test cases for that.
+# that will involve storing the complete list of base classes, which is not done so far.
 
-    # Pre-defined some instance methods
+    # define some built-in instance methods
     $className method destroy {} { rename $self "" }
     $className method eval {{locals {}} __code} {
         foreach var $locals { upvar 2 $var $var }
@@ -238,22 +271,22 @@ proc class {className {baseClasses {}} classDefinition} {
     # define bare accessor methods to get instance vars.  doing so here avoids
     # an additional step during each method dispatch.
     foreach var $implicitAccess {
-        proc "$className $var" {} "uplevel 1 set instVars($var)"
+        proc "$className $var" {} "uplevel 1 set instanceVarsDict($var)"
     }
     # define mutator method to set instance vars.  it has to be one method, not one per var,
-    # because multi-word method names aren't supported by the object's dispatcher.
+    # because multi-word method names aren't supported by the instance's dispatcher.
     proc "$className set" {var value} {className implicitMutate} {
         if {$var ni $implicitMutate} {
             return -code error -level 2 "In class $className, instance variable \"$var\" is not writable from outside the instance."
         }
-        uplevel 1 set instVars($var) $value
+        uplevel 1 set instanceVarsDict($var) $value
     }
 
     return $className
 }
 
-# From within a method, invokes the given method on the base class.
-# Note that this will only call the last baseClass given
+# From within a method, invokes the given method of the base class.
+# Note that this will only call the last baseClass given.
 proc super {method args} {
     upvar self self
     # take for our reference point the class whose method is calling 'super',

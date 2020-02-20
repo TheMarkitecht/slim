@@ -34,7 +34,7 @@ class Account {
     r name "Unknown"
 }
 
-# We have some class methods predefined
+# We have some classProcs predefined
 puts "---- class Account ----"
 puts "Account vars=[Account instanceVarsList]"
 puts "Account methods=[Account methods]"
@@ -48,8 +48,7 @@ Account method validateInstance {} {
     puts "[$self className] opening balance $balance is OK."
 }
 
-# Now flesh out the class with some methods
-# Could use 'Account method' here instead
+# Now flesh out the class with some instance methods.
 Account method deposit {amount} {
     set balance [+ $balance $amount]
 }
@@ -77,11 +76,11 @@ Account method describe {label} {
 set a [Account new set name "Bob Smith"]
 
 puts "---- object Account ----"
-# We can use class methods on the instance too
+# We can use classProc's on the instance too.
 puts a.vars=[$a instanceVarsList]
 puts a.className=[$a className]
 
-# Now object methods
+# Now instance methods
 $a deposit 100
 puts "deposit 100 -> [$a see]"
 
@@ -149,7 +148,7 @@ puts ""
 
 # 'eval' is similar to 'dict with' for an object, except it operates
 # in its own scope. A list of variables can be imported into the object scope.
-# It is useful for ad-hoc operations for which it is not worth defining a method.
+# It is useful for ad-hoc operations for which a method is undesirable for some reason.
 set total 0
 $a eval total { incr total $balance }
 incr total [$b see]
