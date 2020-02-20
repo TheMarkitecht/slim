@@ -153,20 +153,20 @@ proc class {className {baseclasses {}} classDefinition} {
     # a default ctor method called 'set' is available; see below.
     proc "$className new" { {ctorName {}} args } {className classVars vars} {
         # clone an entire dictionary of instance variables from the existing classVars.
-        set instvars $classVars
+        set instVars $classVars
         if {$ctorName eq {set}} {
             # default constructor.  this one simply memorizes each var given as a name and value pair.
-            foreach {n v} $args {set instvars($n) $v}
+            foreach {n v} $args {set instVars($n) $v}
             set ctorName {}
         }
 
         # declare the object dispatcher for $className.
         # Store the className in both the ref value and tag, for debugging.
         set obj [ref $className $className "$className finalize"]
-        # the instance's variables are all stored in the instvars declared here as a static.
+        # the instance's variables are all stored in the instVars declared here as a static.
         # that means instance variables are inaccessible (by $ substitution) anywhere else
         # except inside a method that was dispatched through here.
-        proc $obj {method args} {className classVars instvars} {
+        proc $obj {method args} {className classVars instVars} {
             if { ! [exists -command "$className $method"]} {
                 if {![exists -command "$className unknown"]} {
                     return -code error "In class $className, unknown method \"$method\": should be [join [$className methods] ", "]"
@@ -175,7 +175,7 @@ proc class {className {baseclasses {}} classDefinition} {
             }
             "$className $method" {*}$args
         }
-        # from this point forward, any change to instvars is ignored; they've already been initialized.
+        # from this point forward, any change to instVars is ignored; they've already been initialized.
 
         if {$ctorName ne {}} {
             # call the additional constructor method that was specified by ctorName.  its return value is discarded.
@@ -195,7 +195,7 @@ proc class {className {baseclasses {}} classDefinition} {
     proc "$className method" {method arglist __body} className {
         proc "$className $method" $arglist {__body} {
             # Make sure this isn't incorrectly called without an object
-            if {![uplevel exists instvars]} {
+            if {![uplevel exists instVars]} {
                 # using 'return -code error' here instead of 'return -code error -level 2', to improve stack traces.
                 set meth [lindex [info level 0] 0]
                 lassign $meth a b
@@ -204,7 +204,7 @@ proc class {className {baseclasses {}} classDefinition} {
             set self [lindex [info level -1] 0]
             # Note that we can't use 'dict with' here because
             # the dict isn't updated until the body completes.
-            foreach __ [$self vars] {upvar 1 instvars($__) $__}
+            foreach __ [$self vars] {upvar 1 instVars($__) $__}
             unset -nocomplain __
             eval $__body
         }
@@ -238,7 +238,7 @@ proc class {className {baseclasses {}} classDefinition} {
     # define bare accessor methods to get instance vars.  doing so here avoids
     # an additional step during each method dispatch.
     foreach var $implicitAccess {
-        proc "$className $var" {} "uplevel 1 set instvars($var)"
+        proc "$className $var" {} "uplevel 1 set instVars($var)"
     }
     # define mutator method to set instance vars.  it has to be one method, not one per var,
     # because multi-word method names aren't supported by the object's dispatcher.
@@ -246,7 +246,7 @@ proc class {className {baseclasses {}} classDefinition} {
         if {$var ni $implicitMutate} {
             return -code error -level 2 "In class $className, instance variable \"$var\" is not writable from outside the instance."
         }
-        uplevel 1 set instvars($var) $value
+        uplevel 1 set instVars($var) $value
     }
 
     return $className
