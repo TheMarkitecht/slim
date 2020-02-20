@@ -161,14 +161,16 @@ proc class {className {baseClasses {}} classDefinition} {
 
     # define the class dispatcher for $className
     # It simply dispatches 'className cmd' to a procedure named {className cmd}
-    # with a nice message if the class procedure doesn't exist
+    # with a nice message if the class procedure doesn't exist.
     proc $className {{cmd new} args} className {
-        if {![exists -command "$className $cmd"]} {
-            return -code error "In class $className, unknown command or class method \"$cmd\": should be [join [$className methods] ", "]"
+        if { ! [exists -command "$className $cmd"]} {
+            if { ! [exists -command "$className unknown"]} {
+                return -code error "In class $className, unknown classProc \"$cmd\": should be [join [$className methods] ", "]"
+            }
+            tailcall "$className unknown" $cmd {*}$args
         }
         tailcall "$className $cmd" {*}$args
     }
-#TODO: try again to eliminate the class dispatcher.
 
     # "new" class method, creates a new instance.  this now accepts any desired arguments,
     # and passes those along to the given ctor method.
@@ -190,9 +192,15 @@ proc class {className {baseClasses {}} classDefinition} {
         # the instance's variables are all stored in the instanceVarsDict defined here as a static.
         # that means instance variables are inaccessible (by $ substitution) anywhere else
         # except inside a method that was dispatched through here.
+        # methods and classProcs both are defined to the interp with two-word names, the first being $className.
+        # but they require different dispatchers ($className or $ins) due to the dispatcher's name.
+        # after dispatch, methods expect to find $self and then bind its instance variables to locals.
+        # classProcs don't use an instance.  however, classProcs can be invoked OK by the instance dispatcher
+        # due to their identical naming convention and argument convention.
+        # note that we can't use tailcall here; it prevents the use of statics that are required.
         proc $ins {method args} {className instanceVarsDict instanceVarsList} {
             if { ! [exists -command "$className $method"]} {
-                if {![exists -command "$className unknown"]} {
+                if { ! [exists -command "$className unknown"]} {
                     return -code error "In class $className, unknown method \"$method\": should be [join [$className methods] ", "]"
                 }
                 return ["$className unknown" $method {*}$args]
@@ -221,14 +229,20 @@ proc class {className {baseClasses {}} classDefinition} {
     # that means old instances are never left out; they can use the newest methods.
     proc "$className method" {method arglist __body} className {
         proc "$className $method" $arglist {__body} {
-            # Make sure this isn't incorrectly called without an instance
+            # Make sure this isn't incorrectly called without an instance.
             if {![uplevel 1 exists instanceVarsDict]} {
                 # using 'return -code error' here instead of 'return -code error -level 2', to improve stack traces.
                 set meth [lindex [info level 0] 0]
                 lassign $meth a b
                 return -code error "\"${meth}\" method called with no object instance.  Did you mean \"$a new $b\"?"
             }
+            # find self by extracting it from the call to the instance dispatcher, 1 frame up.
+            # this can't be passed as a static because it's different for each call.
+            # and it shouldn't be passed as an ordinary argument because that disturbs the method's
+            # arg list, making stack traces look strange.
+#TODO: try again to pass self as an ordinary argument, for speed.  note: that will prevent instance dispatcher invoking a classProc.
             set self [lindex [info level -1] 0]
+            # bind all of self's instance variables to local variables in the method body.
             # Note that we can't use 'dict with' here because
             # the dict isn't updated until the body completes.
             foreach __  [uplevel 1 set instanceVarsList] {upvar 1 instanceVarsDict($__) $__}
