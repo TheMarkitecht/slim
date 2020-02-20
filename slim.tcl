@@ -66,7 +66,7 @@ proc class {className {baseclasses {}} classDefinition} {
     {memberRe {^(\S+)\s+(\S+)(.*)$}}
 } {
     # parse class definition.  perform substitutions.  extract class vars etc.
-    set classvars [dict create]
+    set classVars [dict create]
     set implicitAccess [list]
     set implicitMutate [list]
     set whole {}
@@ -105,7 +105,7 @@ proc class {className {baseclasses {}} classDefinition} {
                         return -code error -errorinfo $errDic(-errorinfo) \
                             "maybe too many words at class member '[string range $whole 0 20]': $errMsg"
                     }
-                    dict set classvars $name $value
+                    dict set classVars $name $value
                     if {$cmd in {read r readwrite rw}} {
                         lappend implicitAccess $name
                     }
@@ -123,20 +123,20 @@ proc class {className {baseclasses {}} classDefinition} {
     }
 
     # inherit from base classes.
-    set baseclassvars {}
+    set baseClassVars {}
     proc "$className baseclass" {} { return {} }
     foreach baseclass $baseclasses {
         # Start by mapping all methods to the parent class
         foreach method [$baseclass methods] { alias "$className $method" "$baseclass $method" }
-        # Now import the base class classvars
-        set baseclassvars [dict merge $baseclassvars [$baseclass classvars]]
+        # Now import the base class classVars
+        set baseClassVars [dict merge $baseClassVars [$baseclass classVars]]
         # The last baseclass will win here
         proc "$className baseclass" {} baseclass { return $baseclass }
     }
 
     # Merge in the baseclass vars with lower precedence
-    set classvars [dict merge $baseclassvars $classvars]
-    set vars [lsort [dict keys $classvars]]
+    set classVars [dict merge $baseClassVars $classVars]
+    set vars [lsort [dict keys $classVars]]
 
     # This is the class dispatcher for $className
     # It simply dispatches 'className cmd' to a procedure named {className cmd}
@@ -151,9 +151,9 @@ proc class {className {baseclasses {}} classDefinition} {
     # "new" class method, creates a new instance.  this now accepts any desired arguments,
     # and passes those along to the given ctor method.
     # a default ctor method called 'set' is available; see below.
-    proc "$className new" { {ctorName {}} args } {className classvars vars} {
-        # clone an entire dictionary of instance variables from the existing classvars.
-        set instvars $classvars
+    proc "$className new" { {ctorName {}} args } {className classVars vars} {
+        # clone an entire dictionary of instance variables from the existing classVars.
+        set instvars $classVars
         if {$ctorName eq {set}} {
             # default constructor.  this one simply memorizes each var given as a name and value pair.
             foreach {n v} $args {set instvars($n) $v}
@@ -166,7 +166,7 @@ proc class {className {baseclasses {}} classDefinition} {
         # the instance's variables are all stored in the instvars declared here as a static.
         # that means instance variables are inaccessible (by $ substitution) anywhere else
         # except inside a method that was dispatched through here.
-        proc $obj {method args} {className classvars instvars} {
+        proc $obj {method args} {className classVars instvars} {
             if { ! [exists -command "$className $method"]} {
                 if {![exists -command "$className unknown"]} {
                     return -code error "In class $className, unknown method \"$method\": should be [join [$className methods] ", "]"
@@ -217,8 +217,8 @@ proc class {className {baseclasses {}} classDefinition} {
 
     # Other simple class procs
     proc "$className vars" {} vars { return $vars }
-    # classvars returns only the DEFAULT values, not the instance's CURRENT values.
-    proc "$className classvars" {} classvars { return $classvars }
+    # classVars returns only the DEFAULT values, not the instance's CURRENT values.
+    proc "$className classVars" {} classVars { return $classVars }
     proc "$className className" {} className { return $className }
     proc "$className methods" {} className {
         lsort [lmap p [info commands "$className *"] {

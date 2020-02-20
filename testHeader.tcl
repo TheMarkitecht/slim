@@ -44,7 +44,7 @@ proc assertError {msgPattern script} {
 }
 
 proc assertClassVars {obj state} {
-    assert {[sortDic [$obj classvars]] eq [sortDic $state]}
+    assert {[sortDic [$obj classVars]] eq [sortDic $state]}
 }
 
 proc assertState {obj state} {
