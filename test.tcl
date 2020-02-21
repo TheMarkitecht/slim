@@ -33,18 +33,6 @@ proc handleTestError {errMsg errDic} {
     exit 1
 }
 
-proc bench {label  reps  script} {
-    #TODO: implement benchmarks
-    puts "$label:  reps=$reps"
-    flush stdout
-    set beginMs [clock milliseconds]
-    uplevel 1 loop attempt 0 $reps \{ $script \}
-    set elapseMs $([clock milliseconds] - $beginMs)
-    set eachUs $(double($elapseMs) / double($reps) * 1000.0)
-    puts [format "    time=%0.3fs  each=%0.1fus" $(double($elapseMs) / 1000.0) $eachUs]
-    flush stdout
-}
-
 proc runTest {testName benchReps} {
     # each test is run in a dedicated interp so it can't affect any further test.
     puts "========= Begin Test $testName ========================"
@@ -54,6 +42,7 @@ proc runTest {testName benchReps} {
     $itp alias runTest runTest
     $itp eval [list set ::appDir $::appDir]
     $itp eval [list set ::testDir $::testDir]
+    $itp eval [list set ::benchReps $::benchReps]
     $itp eval [list source [f+ $::appDir testHeader.tcl]]
     $itp eval [list source [f+ $::testDir $testName.tcl]]
     $itp eval [list source [f+ $::appDir testFooter.tcl]]
@@ -64,5 +53,5 @@ proc runTest {testName benchReps} {
 set ::appDir [f+ [pwd] [file dirname [info script]]]
 set ::testDir [f+ $::appDir test]
 
-lassign  $::argv  testName  benchReps
-runTest $testName $benchReps
+lassign  $::argv  ::testName  ::benchReps
+runTest $::testName $::benchReps

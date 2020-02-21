@@ -64,3 +64,15 @@ proc sortDic {dic} {
     }
     return $all
 }
+
+proc bench {label  reps  script} {
+    set reps $($reps * $::benchReps)
+    puts "$label:  reps=$reps"
+    flush stdout
+    set beginMs [clock milliseconds]
+    uplevel 1 loop attempt 0 $reps \{ $script \}
+    set elapseMs $([clock milliseconds] - $beginMs)
+    set eachUs $(double($elapseMs) / double($reps) * 1000.0)
+    puts [format "    time=%0.3fs  each=%0.1fus" $(double($elapseMs) / 1000.0) $eachUs]
+    flush stdout
+}
