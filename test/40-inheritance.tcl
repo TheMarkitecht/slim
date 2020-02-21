@@ -41,9 +41,26 @@ proc test {} {
     }
     assert { ! [FossilPet inherits Navy]}
     class MuseumPet FossilPet {
-        r displayAtMuseum {}
+        r displayAtMuseum FieldNaturalHistory
     }
     assert {[MuseumPet inherits FossilPet]}
     assert {[MuseumPet inherits Pet]}
     assert { ! [MuseumPet inherits Navy]}
+
+    # report on multiple inheritance.
+    class PetNavy {MuseumPet Navy} {
+        r interspeciesAlliance 1
+    }
+    assert {[PetNavy inherits MuseumPet]}
+    assert {[PetNavy inherits FossilPet]}
+    assert {[PetNavy inherits Pet]}
+    assert {[PetNavy inherits Navy]}
+
+    # action of multiple inheritance.
+    set pn [PetNavy new]
+    assert {[$pn cn] eq {PetNavy}}
+    assert {[$pn foundIn] eq {South Dakota}}
+    assert {[$pn ships] eq [list]}
+    assert {[$pn displayAtMuseum] eq {FieldNaturalHistory}}
+    assert {[$pn interspeciesAlliance] == 1}
 }

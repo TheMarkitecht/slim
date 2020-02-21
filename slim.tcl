@@ -282,11 +282,6 @@ proc class {className {baseClasses {}} classDefinition} {
         return 0
     }
 
-#TODO: add test cases for multiple inheritance.
-#TODO: support inheritance test.  implement as method inherits {className}.
-# recursive, not iterative, due to multiple inheritance.  include test cases for that.
-# that will involve storing the complete list of base classes, which might not be done so far.
-
     # define some built-in instance methods.
     $className method destroy {} { rename $self "" }
     $className method eval {{locals {}} __code} {
