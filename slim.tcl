@@ -309,8 +309,6 @@ proc class {className {baseClasses {}} classDefinition} {
 # If "*" is given as the base class, then the list of base classes is scanned;
 # the right-most one that actually supports the method is called.
 proc baseCall {baseClass method args} {
-#TODO: see if this upvar can be eliminated, or if it's required to pass 'self' along to the base class method.
-    upvar self self
     # take for our reference point the class whose method is calling 'baseCall',
     # instead of the class of self.
     # this fixes infinite recursion when an inherited method calls 'baseCall', because
