@@ -28,7 +28,7 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=3
+current_page=17
 FILE_NAME_0=15901;Tcl;0;EUTF-8;0;1;0;%2Fsecure%2FSecureNotes%2FTcl_Evolution%2Fslim%2Fslim.tcl;0;4
 FILE_NAME_1=1419;Tcl;0;EUTF-8;0;1;0;%2Fsecure%2FSecureNotes%2FTcl_Evolution%2Fslim%2Ftest.tcl;0;4
 FILE_NAME_2=2140;Tcl;0;EUTF-8;0;1;0;%2Fsecure%2FSecureNotes%2FTcl_Evolution%2Fslim%2FtestHeader.tcl;0;4
@@ -46,7 +46,7 @@ FILE_NAME_13=1887;Tcl;0;EUTF-8;0;1;0;%2Fsecure%2FSecureNotes%2FTcl_Evolution%2Fs
 FILE_NAME_14=1130;Tcl;0;EUTF-8;0;1;0;%2Fsecure%2FSecureNotes%2FTcl_Evolution%2Fslim%2Ftest%2F65-validateInstance.tcl;0;4
 FILE_NAME_15=1215;Tcl;0;EUTF-8;0;1;0;%2Fsecure%2FSecureNotes%2FTcl_Evolution%2Fslim%2Ftest%2F70-finalize.tcl;0;4
 FILE_NAME_16=1284;Tcl;0;EUTF-8;0;1;0;%2Fsecure%2FSecureNotes%2FTcl_Evolution%2Fslim%2Ftest%2F80-namespace.tcl;0;4
-FILE_NAME_17=1015;Tcl;0;EUTF-8;0;1;0;%2Fsecure%2FSecureNotes%2FTcl_Evolution%2Fslim%2Ftest%2F90-speed.tcl;0;4
+FILE_NAME_17=884;Tcl;0;EUTF-8;0;1;0;%2Fsecure%2FSecureNotes%2FTcl_Evolution%2Fslim%2Ftest%2F90-speed.tcl;0;4
 FILE_NAME_18=4011;Tcl;0;EUTF-8;0;1;0;%2Fsecure%2FSecureNotes%2FTcl_Evolution%2Fslim%2Fexamples%2Faccounting.tcl;0;4
 
 [VTE]
@@ -62,4 +62,4 @@ NF_00_CM=./test.tcl  all 5
 NF_00_WD=%p
 NF_01_LB=Make Custom _Target...
 NF_01_CM=./test.tcl  
-NF_01_WD=
+NF_01_WD=%p

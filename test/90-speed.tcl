@@ -24,6 +24,13 @@
 proc test {} {
     setup Pet
 
+    Pet classProc bump {i} {
+        incr i
+    }
+    bench {classProc} 50000 {
+        Pet bump 5
+    }
+
     set p [Pet new]
     bench {Basic method call} 20000 {
         $p older
