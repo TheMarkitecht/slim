@@ -196,9 +196,7 @@ proc class {className {baseClasses {}} classDefinition} {
         # methods and classProcs both are defined to the interp with two-word names, the first being $className.
         # but they require different dispatchers ($className or $ins) due to the dispatcher's name.
         # after dispatch, methods expect to find $self and then bind its instance variables to locals.
-        # classProcs don't use an instance.  however, classProcs can be invoked OK by the instance dispatcher
-        # due to their identical naming convention and argument convention.
-#TODO: correct that naming comment for latest version.
+        # classProcs don't use an instance.  also classProcs can't be invoked by the instance dispatcher any longer.
         # note that we can't use tailcall here; it prevents the use of statics that are required.
         proc $ins {method args} {className instanceVarsDict instanceVarsList} {
             if { ! [exists -command "$className _method_$method"]} {
@@ -308,7 +306,7 @@ proc class {className {baseClasses {}} classDefinition} {
 # From within a method, invokes the given method of the given base class.
 # That class must be one of the base classes of the class that defined the current method.
 # Otherwise this returns an error.
-# If "*" or empty string is given as the base class, then the list of base classes is scanned;
+# If "*" is given as the base class, then the list of base classes is scanned;
 # the right-most one that actually supports the method is called.
 proc baseCall {baseClass method args} {
 #TODO: see if this upvar can be eliminated, or if it's required to pass 'self' along to the base class method.
@@ -319,7 +317,9 @@ proc baseCall {baseClass method args} {
     # it would call itself.  the same bug was present in Jim oo, not only in slim.
     set implementorClass [lindex [lindex [info level -1] 0] 0]
     set allBc [$implementorClass baseClasses]
-    if {$baseClass in { * {} }} {
+    if {$baseClass eq {}} {
+        return -code error {Must specify base class name or "*".}
+    } elseif {$baseClass in { * {} }} {
         set baseClass __
         foreach c $allBc {
             if {[exists -command "$c _method_$method"]} {set baseClass $c}
