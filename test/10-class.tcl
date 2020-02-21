@@ -56,7 +56,7 @@ proc test {} {
 
     # supports classProcs list and has correct classProcs?
     assert {[lsort [Pet classProcs]] eq [lsort [list  \
-        baseClasses classProc classProcs finalize instanceVarsList  \
+        baseClasses classProc classProcs finalize inherits instanceVarsList  \
         method methods new templateVarsDict]]}
 
     # method call ok?

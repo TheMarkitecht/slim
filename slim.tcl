@@ -239,8 +239,8 @@ proc class {className {baseClasses {}} classDefinition} {
             # find self by extracting it from the call to the instance dispatcher, 1 frame up.
             # this can't be passed as a static because it's different for each call.
             # and it shouldn't be passed as an ordinary argument because that disturbs the method's
-            # arg list, making stack traces look strange.
-#TODO: try again to pass self as an ordinary argument, for speed.  note: that will prevent instance dispatcher invoking a classProc.
+            # arg list, making stack traces look strange.  it also requires the instance dispatcher to
+            # hold a reference to the instance in its own static, preventing garbage collection forever!
             set self [lindex [info level -1] 0]
             # bind all of self's instance variables to local variables in the method body.
             # Note that we can't use 'dict with' here because
@@ -274,10 +274,19 @@ proc class {className {baseClasses {}} classDefinition} {
         }]
     }
     proc "$className baseClasses" {} baseClasses { return $baseClasses }
+    proc "$className inherits" {requireBase} baseClasses {
+        if {$requireBase in $baseClasses} {return 1}
+        foreach bc $baseClasses {
+            if {[$bc inherits $requireBase]} {return 1}
+        }
+        return 0
+    }
+
 #TODO: add test cases for multiple inheritance.
 #TODO: support inheritance test.  implement as method inherits {className}.
 # recursive, not iterative, due to multiple inheritance.  include test cases for that.
 # that will involve storing the complete list of base classes, which might not be done so far.
+
     # define some built-in instance methods.
     $className method destroy {} { rename $self "" }
     $className method eval {{locals {}} __code} {

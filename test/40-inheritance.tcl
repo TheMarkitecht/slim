@@ -33,4 +33,17 @@ proc test {} {
     }
     set p [FossilPet new fromSpecies Tipper dog brown]
     assert {[$p cn] eq {FossilPet}}
+
+    # report on inheritance.
+    assert {[FossilPet inherits Pet]}
+    class Navy {
+        r ships [list]
+    }
+    assert { ! [FossilPet inherits Navy]}
+    class MuseumPet FossilPet {
+        r displayAtMuseum {}
+    }
+    assert {[MuseumPet inherits FossilPet]}
+    assert {[MuseumPet inherits Pet]}
+    assert { ! [MuseumPet inherits Navy]}
 }
