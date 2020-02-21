@@ -73,7 +73,7 @@ proc test {} {
     assertState $t $expected
 
     # wrong arguments throws error?
-    assertError {wrong # args: should be "Pet _method_older"} {
+    assertError {wrong # args: should be "Pet _method_older self"} {
         $p older tooMuch
     }
 

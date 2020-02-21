@@ -198,14 +198,14 @@ proc class {className {baseClasses {}} classDefinition} {
         # after dispatch, methods expect to find $self and then bind its instance variables to locals.
         # classProcs don't use an instance.  also classProcs can't be invoked by the instance dispatcher any longer.
         # note that we can't use tailcall here; it prevents the use of statics that are required.
-        proc $ins {method args} {className instanceVarsDict instanceVarsList} {
+        proc $ins {method args} {ins className instanceVarsDict instanceVarsList} {
             if { ! [exists -command "$className _method_$method"]} {
                 if { ! [exists -command "$className _method_unknown"]} {
                     return -code error "In instance of $className, unknown method \"$method\": should be [join [$className methods] ", "]"
                 }
-                return ["$className _method_unknown" $method {*}$args]
+                return ["$className _method_unknown" $method $ins {*}$args]
             }
-            "$className _method_$method" {*}$args
+            "$className _method_$method" $ins {*}$args
         }
         # from this point forward, any change to instanceVarsDict is ignored; they've already been
         # copied into the dispatcher's static variable.
@@ -228,7 +228,7 @@ proc class {className {baseClasses {}} classDefinition} {
     # even so, methods remain uniform for every instance of a class, just like classProcs do.
     # that means old instances are never left out; they can use the newest methods.
     proc "$className method" {method arglist __body} className {
-        proc "$className _method_$method" $arglist {__body} {
+        proc "$className _method_$method" [concat self $arglist] {__body} {
             # Make sure this isn't incorrectly called without an instance.
             if {![uplevel 1 exists instanceVarsDict]} {
                 # using 'return -code error' here instead of 'return -code error -level 2', to improve stack traces.
@@ -236,12 +236,6 @@ proc class {className {baseClasses {}} classDefinition} {
                 lassign $meth a b
                 return -code error "\"${meth}\" method called with no object instance.  Did you mean \"$a new $b\"?"
             }
-            # find self by extracting it from the call to the instance dispatcher, 1 frame up.
-            # this can't be passed as a static because it's different for each call.
-            # and it shouldn't be passed as an ordinary argument because that disturbs the method's
-            # arg list, making stack traces look strange.
-#TODO: try again to pass self as an ordinary argument, for speed.  note: that will prevent instance dispatcher invoking a classProc.
-            set self [lindex [info level -1] 0]
             # bind all of self's instance variables to local variables in the method body.
             # Note that we can't use 'dict with' here because
             # the dict isn't updated until the body completes.
@@ -274,26 +268,28 @@ proc class {className {baseClasses {}} classDefinition} {
         }]
     }
     proc "$className baseClasses" {} baseClasses { return $baseClasses }
+
 #TODO: add test cases for multiple inheritance.
-#TODO: support inheritance test.  implement as method inherits {className}.
+#TODO: support inheritance test.  implement as classProc inherits {className}.
 # recursive, not iterative, due to multiple inheritance.  include test cases for that.
 # that will involve storing the complete list of base classes, which might not be done so far.
+
     # define some built-in instance methods.
     $className method destroy {} { rename $self "" }
     $className method eval {{locals {}} __code} {
         foreach var $locals { upvar 2 $var $var }
         eval $__code
     }
-    proc "$className _method_className" {} className { return $className }
+    proc "$className _method_className" {self} className { return $className }
 
     # define bare accessor methods to get instance vars.  doing so here avoids
     # an additional step during each method dispatch.
     foreach var $implicitAccess {
-        proc "$className _method_$var" {} "uplevel 1 set instanceVarsDict($var)"
+        proc "$className _method_$var" {self} "uplevel 1 set instanceVarsDict($var)"
     }
     # define mutator method to set instance vars.  it has to be one method, not one per var,
     # because multi-word method names aren't supported by the instance's dispatcher.
-    proc "$className _method_set" {var value} {className implicitMutate} {
+    proc "$className _method_set" {self var value} {className implicitMutate} {
         if {$var ni $implicitMutate} {
             return -code error -level 2 "In instance of $className, instance variable \"$var\" is not writable from outside the instance."
         }
@@ -328,7 +324,8 @@ proc baseCall {baseClass method args} {
     } elseif { ! [exists -command "$baseClass _method_$method"]} {
         return -code error "Base class $baseClass does not implement method $method"
     }
-    uplevel 2 [list $baseClass _method_$method {*}$args]
+    upvar self self
+    uplevel 2 [list $baseClass _method_$method $self {*}$args]
 }
 
 #TODO: see if Jim offers a hook to format the default stack dumps.  maybe override the stackdump command?  then adopt the format from slim's test framework.
