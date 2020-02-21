@@ -33,11 +33,11 @@ proc test {} {
     # supports className?
     assert {[$p className] eq {Pet}}
 
-    # supports baseClass?
-    assert {[$p baseClass] eq {}}
+    # supports baseClasses?
+    assert {[Pet baseClasses] eq {}}
 
     # supports vars list and has correct vars?
-    assert {[lsort [$p instanceVarsList]] eq [lsort [list name color species age collar]]}
+    assert {[lsort [Pet instanceVarsList]] eq [lsort [list name color species age collar]]}
 
     # has correct default values?
     set expected {
@@ -50,11 +50,14 @@ proc test {} {
     assertState $p $expected
 
     # supports methods list and has correct methods?
-    assert {[lsort [$p methods]] eq [lsort [list  \
-        baseClass classProc className destroy eval  \
-        finalize instanceVarsList method methods new set templateVarsDict  \
-        name color species age collar  \
-        fromSpecies makeTag older txt]]}
+    assert {[lsort [Pet methods]] eq [lsort [list  \
+        className destroy eval set  \
+        age collar color fromSpecies makeTag name older species txt]]}
+
+    # supports classProcs list and has correct classProcs?
+    assert {[lsort [Pet classProcs]] eq [lsort [list  \
+        baseClasses classProc classProcs finalize instanceVarsList  \
+        method methods new templateVarsDict]]}
 
     # method call ok?
     assert {[$p older] == 1}
@@ -70,7 +73,7 @@ proc test {} {
     assertState $t $expected
 
     # wrong arguments throws error?
-    assertError {wrong # args: should be "Pet older"} {
+    assertError {wrong # args: should be "Pet _method_older"} {
         $p older tooMuch
     }
 
@@ -78,7 +81,7 @@ proc test {} {
     assert {[$p color] eq {black}}
 
     # nonexistent method throws error?
-    assertError {In class Pet, unknown method "junk": should be *} {
+    assertError {In instance of Pet, unknown method "junk": should be *} {
         $p junk
     }
 }

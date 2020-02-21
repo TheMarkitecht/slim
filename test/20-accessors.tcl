@@ -35,7 +35,7 @@ proc test {} {
     assert {[$p   collar] eq {small}}
 
     # illegal variable write through implicit mutator method throws error?
-    assertError {In class Pet, instance variable "age" is not writable from outside the instance.} {
+    assertError {In instance of Pet, instance variable "age" is not writable from outside the instance.} {
         $p set age 10
     }
 

@@ -26,14 +26,12 @@ proc test {} {
     setup BrochurePet
 
     set p [BrochurePet new]
-    assert {[lsort [$p instanceVarsList]] eq [lsort [list \
+    assert {[lsort [BrochurePet instanceVarsList]] eq [lsort [list \
         name  color  species  age  collar  \
         brochureName  brochure  brochurePages  brochurePics  \
         totalLen1   totalLen2  totalLen3  quoted1  emptyString
     ]]}
-    assert {[$p brochure] eq {
-        (Empty brochure text)
-    }}
+    assert {[$p brochure] eq "\n        (Empty brochure text)\n    "}
     assert {[$p brochure] ne [string trimleft [$p brochure]]}
     assert {[$p brochure] ne [string trimright [$p brochure]]}
     assert {[$p brochurePages] eq [dict create page1 landscape]}

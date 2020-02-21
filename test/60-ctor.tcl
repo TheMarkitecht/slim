@@ -90,9 +90,9 @@ proc test {} {
     set p [Complex new ctorA]
     assertState $p {stuff none flotsam all}
 
-    # ctor call super ctor w/same name.
+    # ctor call base ctor w/same name.
     FossilPet method fromSpecies {name_ species_ color_ foundIn_} {
-        super fromSpecies $name_ $species_ $color_
+        baseCall * fromSpecies $name_ $species_ $color_
         set foundIn $foundIn_
     }
     set p [FossilPet new fromSpecies Tipper dog brown Montana]

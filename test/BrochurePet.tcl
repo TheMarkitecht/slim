@@ -30,6 +30,11 @@ class BrochurePet Pet {
     r brochureName $::brochureDefaultName
 
     # multi-line braced string default value.
+    # this string should have exactly 8 leading spaces in the indentation before the left paren,
+    # 4 leading spaces in the indentation before the right brace,
+    # and no trailing spaces after the right brace or the right paren.
+    # if the editor or source code version control system messes with the whitespace
+    # e.g. by replacing spaces with tabs etc., tests could fail.
     r brochure {
         (Empty brochure text)
     }
@@ -73,6 +78,7 @@ class BrochurePet Pet {
     #"
     # those are not supported in this version due to a bug in 'info complete'.
     # https://github.com/msteveb/jimtcl/issues/181
+    #TODO: import the fix in Jim source and re-test.
 
     # no default value
     r emptyString

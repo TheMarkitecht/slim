@@ -63,7 +63,7 @@ Account method describe {label} {
     puts "$label I am object $self of class [$self className]"
     puts "My 'see' method returns [$self see]"
     puts "My variables are:"
-    foreach i [$self instanceVarsList] {
+    foreach i [[$self className] instanceVarsList] {
         set v [set $i]
         if {[string match <reference.* $v]} {
             catch {append v "; name=[$v name]"}
@@ -77,7 +77,7 @@ set a [Account new set name "Bob Smith"]
 
 puts "---- object Account ----"
 # We can use classProc's on the instance too.
-puts a.vars=[$a instanceVarsList]
+puts a.vars=[[$a className] instanceVarsList]
 puts a.className=[$a className]
 
 # Now instance methods
@@ -103,7 +103,7 @@ class CreditAccount Account {
 CreditAccount method validateInstance {} {
     # Dummy constructor
     # If desired, manually invoke the baseClass constructor
-    super validateInstance
+    baseCall * validateInstance
 }
 
 # Override the 'withdraw' method to allow overdrawing
@@ -114,7 +114,7 @@ CreditAccount method withdraw {amount} {
 # Override the 'describe' method, but invoke the baseClass method first
 CreditAccount method describe {label} {
     # First invoke the base class 'describe'
-    super describe $label
+    baseCall * describe $label
     if {$balance < 0} {
         puts "*** Account is in debit"
     }
@@ -128,7 +128,7 @@ puts ""
 puts "---- object CreditAccount ----"
 set b [CreditAccount new set name "John White"]
 
-puts b.vars=[$b instanceVarsList]
+puts b.vars=[CreditAccount instanceVarsList]
 puts b.className=[$b className]
 
 puts "initial balance -> [$b see]"
@@ -198,16 +198,16 @@ SpendingAccount method fromPayment {amt args} {
     lappend payments [Payment new fromAcct $self $amt]
 }
 SpendingAccount method describe {label} {
-    super describe $label
+    baseCall * describe $label
     foreach p $payments {$p describe}
 }
 set samir [SpendingAccount new fromPayment 90 $a {Samir A.}]
 $samir describe {}
 
-# test invoking super ctor's.
+# test invoking base ctor's.
 SpendingAccount method fromParent {args} {
-    puts "Calling:super fromParent {*}$args"
-    super fromParent {*}$args
+    puts "Calling:base fromParent {*}$args"
+    baseCall * fromParent {*}$args
 }
 set nibiki [SpendingAccount new fromParent $a {Nibiki A.}]
 $nibiki describe {}
