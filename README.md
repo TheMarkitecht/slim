@@ -18,7 +18,14 @@ Legal stuff:  see below.
 
 ## Features of This Version:
 
-* This initial version has proven usable in applications.
+* This version has proven usable in applications.
+* Accepts comments, subcommands, variable substitution, etc. in class definition.
+* 3 modes of outside access selectable for each instance variable: read/write, read only, or private.
+* Multiple inheritance, with all base classes' methods accessible, not just those of the right-most base class.
+* Apps can check for inheritance (direct or indirect) from a given ancestor class.
+* Comprehensive automated test suite, with asserts and basic speed benchmarks.
+* Clean, crisp fundamental concepts and nomenclature.
+* Implementation is heavily commented.
 
 ## Requirements:
 
@@ -30,8 +37,11 @@ There is no build process.  Simply **package require slim**; see the top of **sl
 
 ## Future Direction:
 
-* Accept comments, subcommands, variable substitution, etc. in class variable list.
-* Automated comprehensive test suite, with asserts.
+* Write lots of apps :-) because slim is in very good condition!
+* Convert from LGPL to BSD license.
+* Mark a v1.0 release.  The code ready for that now.
+* Write an introductory document explaining the concepts and syntax, with examples.
+* Explore how slim can be used with namespaces.
 
 ## Legal stuff:
 ```
