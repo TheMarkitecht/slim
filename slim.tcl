@@ -47,6 +47,8 @@ if { ! [exists -command ref]} {
     error "Jim was built with no support for references.  Can't support slim object-oriented programming."
 }
 
+package provide slim 1.0
+
 # first eliminate Jim's built-in OO support, if present.
 catch {rename class {}}
 catch {rename super {}}
